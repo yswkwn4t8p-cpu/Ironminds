@@ -1,43 +1,30 @@
-# Ironminds v4 Clean
+# Ironminds – Finalversion
 
-Sauber neu aufgebaute Version mit stabilem Login, Supabase-Sync, täglichem Spruch, Profilname, Planvorgaben und Stresslevel am Trainingsende.
+## Einrichtung
 
-## Neu in v4.1 Clean
+1. Supabase öffnen.
+2. **SQL Editor → New query** wählen.
+3. Den kompletten Inhalt von `supabase/schema.sql` einfügen und ausführen.
+4. Unter **Authentication → URL Configuration** die GitHub-Pages-Adresse als Site URL und Redirect URL eintragen.
+5. Alle Dateien und Ordner dieser ZIP-Datei in das GitHub-Repository hochladen.
+6. Mit derselben E-Mail auf Handy und PC anmelden.
 
-- SVG-Icons wieder integriert
-- bestehende Trainingspläne können bearbeitet werden
-- Pläne können gelöscht werden
-- Satz- und Wiederholungsvorgaben bleiben beim Bearbeiten erhalten
-- fester Header/Banner entfernt
-- kompakte obere Leiste statt großem Banner
+## Enthalten
 
-## Neu in v4.2 Clean
-
-- Körpergewichtsverlauf wiederhergestellt
-- Umfangsmessungen wiederhergestellt
-- Fortschrittsfotos wiederhergestellt
-- Kraftrekorde wiederhergestellt
-- Muskelgruppen-Auswertung wiederhergestellt
-- Monats- und Jahresstatistiken wiederhergestellt
-
-## Neu in v4.3 Clean
-
-- zusätzliche Sätze können während des Trainings eingefügt werden
-- Historie und Fortschritt befinden sich auf einer gemeinsamen Seite
-- Kraftrekorde, Muskelgruppen sowie Monats- und Jahresstatistiken sind dort gebündelt
-- oberer Schriftzug im Hintergrundbereich wird überblendet
-- unterer Schriftzug lautet Ironminds und ist vollständig sichtbar
-
-## Neu in v4.4 Clean
-
-- Reihenfolge der Übungen im Trainingsplan anpassbar
-- Übungen können nach oben oder unten verschoben werden
-- Reihenfolge wird gespeichert und beim Training übernommen
-- vorhandene Pläne behalten ihre Reihenfolge beim Bearbeiten
-
-## Neu in v4.5 Clean
-
-- ein einziges Stresslevel für das gesamte Training
-- Stresslevel wird erst beim Trainingsabschluss abgefragt
-- Wochenstatistik mit Trainingsanzahl, Sätzen, Workload und durchschnittlichem Stresslevel
-- Stresslevel wird in der Trainingshistorie angezeigt
+- Supabase-Login und geräteübergreifende Synchronisation
+- Offline-Datenspeicherung im Browser
+- täglicher Motivationsspruch und Profilname in der Begrüßung
+- mehrere bearbeitbare Trainingspläne
+- Satz- und Wiederholungsvorgaben je Übung
+- anpassbare Übungsreihenfolge
+- automatische Übernahme der letzten Gewichte
+- zusätzliche Sätze während des Trainings
+- RIR pro Satz
+- Pausentimer
+- ein Stresslevel für das gesamte Training
+- Historie und Fortschritt auf einer Seite
+- Wochen-, Monats- und Jahresstatistiken
+- Workload, Kraftrekorde und Muskelgruppen-Auswertung
+- Körpergewicht, Umfangsmessungen und Fortschrittsfotos
+- Freunde, Freundschaftsanfragen und Workout-Sharing
+- SVG-Icons und mobile Glassmorphism-Oberfläche

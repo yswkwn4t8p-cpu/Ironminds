@@ -2,6 +2,7 @@
   "name": "Ironminds",
   "short_name": "Ironminds",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#090b0f",
   "theme_color": "#090b0f",
