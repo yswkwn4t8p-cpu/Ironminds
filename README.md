@@ -55,3 +55,12 @@ Fortschrittsfotos werden komprimiert und innerhalb des synchronisierten Ironmind
 - mobiler Header korrigiert
 - Abmeldebutton am Handy nicht mehr abgeschnitten
 - Abmelden zusätzlich im Profilbereich
+
+## Neu in v3.4
+
+- Oberfläche vollständig im transparenten Glassmorphism-Stil
+- Startseite mit großem Fitness-Hintergrund und Schnellzugriff
+- neue Wochen- und Workload-Karten
+- Profilübersicht nach Premium-App-Vorbild
+- neue mobile Navigation mit direktem Profilzugriff
+- Freunde weiterhin über die Startseite erreichbar

@@ -15,9 +15,79 @@ const fmt=d=>new Date(d+"T12:00:00").toLocaleDateString("de-DE");
 function toast(text){const t=document.getElementById("toast");t.textContent=text;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)}
 function persist(){dirty=true;saveLocal(db)}
 function volume(){return Math.round(db.workouts.reduce((a,w)=>a+w.exercises.reduce((b,e)=>b+e.sets.reduce((c,s)=>c+(+s.weight||0)*(+s.reps||0),0),0),0))}
-function nav(){const ps=["home","workout","history","plans","friends","exercises"],labels=["Übersicht","Training","Historie","Pläne","Freunde","Übungen"],icons=["⌂","▶","↗","☷","♟","＋"];return `<nav class="tabs">${ps.map((p,i)=>`<button class="tab ${page===p?"active":""}" data-p="${p}">${labels[i]}</button>`).join("")}</nav><nav class="bottom">${ps.map((p,i)=>`<button class="${page===p?"active":""}" data-p="${p}"><b>${icons[i]}</b>${i?labels[i]:"Home"}</button>`).join("")}</nav>`}
-function shell(body){return `<div class="app"><header><div class="brand"><div class="logo">PA</div><div><h1>Ironminds</h1><div class="sub">Train smart. Track everything.</div></div></div><div class="actions"><span id="syncState" class="sync">● synchronisiert</span><button class="btn" id="profileBtn">👤 <span class="hide-mobile">Profil</span></button><button class="btn hide-mobile" id="backup">Backup</button><button class="btn header-logout" id="logout">Abmelden</button></div></header>${nav()}<main>${body}</main></div>`}
-function home(){return `<div class="grid"><section class="card hero s12"><div class="hero-row"><div><div class="muted">IRONMINDS</div><h2>Bereit fürs nächste Training?</h2><div class="muted">Letzte Gewichte werden vorausgefüllt und synchronisiert.</div></div><button class="btn primary" data-go="workout">＋ Training starten</button></div><div class="stats"><div class="stat"><b>${db.workouts.length}</b><span>Trainings</span></div><div class="stat"><b>${db.plans.length}</b><span>Pläne</span></div><div class="stat"><b>${volume()} kg</b><span>Volumen</span></div><div class="stat"><b>${db.exercises.length}</b><span>Übungen</span></div></div></section><section class="card s6"><h3>Letzte Trainings</h3>${db.workouts.length?`<div class="list">${db.workouts.slice(0,6).map(w=>`<div class="row"><div><b>${esc(w.name)}</b><div class="row-sub">${fmt(w.date)} · ${w.exercises.length} Übungen</div></div><span class="pill">${w.exercises.reduce((a,e)=>a+e.sets.length,0)} Sätze</span></div>`).join("")}</div>`:`<div class="muted">Noch keine Trainings.</div>`}</section><section class="card s6"><h3>Schnellzugriff</h3><div class="list"><button class="btn" data-go="plans">☷ Pläne verwalten</button><button class="btn" data-go="history">↗ Fortschritt ansehen</button><button class="btn" data-go="exercises">＋ Übung anlegen</button></div></section></div>`}
+function nav(){
+  const ps=["home","workout","history","plans","exercises","profile"];
+  const labels=["Home","Training","Historie","Pläne","Übungen","Profil"];
+  const icons=["⌂","🏋","▥","▣","⚒","♙"];
+  return `<nav class="tabs">${ps.map((p,i)=>`<button class="tab ${page===p?"active":""}" data-p="${p}">${labels[i]}</button>`).join("")}</nav>
+  <nav class="bottom">${ps.map((p,i)=>`<button class="${page===p?"active":""}" data-p="${p}"><b>${icons[i]}</b>${labels[i]}</button>`).join("")}</nav>`
+}
+function shell(body){
+  return `<div class="app">
+    <header class="glass-header">
+      <div class="brand">
+        <div class="logo">PA</div>
+        <div class="brand-copy"><h1>IRONMINDS</h1><div class="sub">Disziplin. Fokus. Fortschritt.</div></div>
+      </div>
+      <div class="actions">
+        <span id="syncState" class="sync">● synchronisiert</span>
+        <button class="icon header-profile" id="profileBtn" aria-label="Profil">♙</button>
+        <button class="btn hide-mobile" id="backup">Backup</button>
+        <button class="btn header-logout" id="logout">Abmelden</button>
+      </div>
+    </header>${nav()}<main>${body}</main>
+  </div>`
+}
+function home(){
+  const name=profile?.display_name||user?.email?.split("@")[0]||"Athlet";
+  const latest=db.workouts[0];
+  const weekStart=new Date();weekStart.setDate(weekStart.getDate()-6);weekStart.setHours(0,0,0,0);
+  const week=db.workouts.filter(w=>new Date(w.date+"T12:00:00")>=weekStart);
+  const weekLoad=week.reduce((a,w)=>a+workoutLoad(w),0);
+  const weekSets=week.reduce((a,w)=>a+w.exercises.reduce((b,e)=>b+e.sets.length,0),0);
+  return `<div class="home-dashboard">
+    <section class="welcome-panel">
+      <div class="welcome-copy">
+        <span class="eyebrow">Guten Tag,</span>
+        <h2>${esc(name)}!</h2>
+        <p>„Das, was dich heute herausfordert, macht dich morgen stärker.“</p>
+      </div>
+    </section>
+
+    <section class="card glass-card quick-section">
+      <h3>Schnellzugriff</h3>
+      <div class="quick-grid">
+        <button class="quick-tile" data-go="workout"><span>🏋</span><b>Training</b></button>
+        <button class="quick-tile" data-go="plans"><span>▣</span><b>Pläne</b></button>
+        <button class="quick-tile" data-go="exercises"><span>⚒</span><b>Übungen</b></button>
+        <button class="quick-tile" data-go="history"><span>▥</span><b>Historie</b></button>
+        <button class="quick-tile" data-go="history"><span>↗</span><b>Fortschritt</b></button>
+        <button class="quick-tile" data-go="profile"><span>♙</span><b>Profil</b></button>
+        <button class="quick-tile" data-go="friends"><span>♧</span><b>Freunde</b></button>
+        <button class="quick-tile" data-go="profile"><span>◔</span><b>Statistiken</b></button>
+      </div>
+    </section>
+
+    <section class="card glass-card latest-card">
+      <div class="section-title"><h3>Letztes Training</h3><span>${latest?fmt(latest.date):"–"}</span></div>
+      ${latest?`<div class="latest-name">${esc(latest.name)}</div>
+      <div class="metric-row">
+        <div><span>Übungen</span><b>${latest.exercises.length}</b></div>
+        <div><span>Sätze</span><b>${latest.exercises.reduce((a,e)=>a+e.sets.length,0)}</b></div>
+        <div><span>Workload</span><b>${workoutLoad(latest).toLocaleString("de-DE")} kg</b></div>
+      </div>`:`<div class="muted">Noch kein Training gespeichert.</div>`}
+    </section>
+
+    <section class="card glass-card weekly-card">
+      <div class="section-title"><h3>Übersicht diese Woche</h3><button class="text-link" data-go="history">Mehr anzeigen</button></div>
+      <div class="weekly-grid">
+        <div class="weekly-stat"><span>Trainings</span><b>${week.length}</b><small>Workouts</small></div>
+        <div class="weekly-stat"><span>Workload</span><b>${Math.round(weekLoad).toLocaleString("de-DE")} kg</b><small>${weekSets} Sätze</small></div>
+        <div class="weekly-stat"><span>Gesamt</span><b>${volume().toLocaleString("de-DE")} kg</b><small>seit Beginn</small></div>
+      </div>
+    </section>
+  </div>`
+}
 function workout(){return `<div class="grid"><section class="card s12"><h2>Training</h2><div class="two"><div class="field"><label>Trainingsplan</label><select id="plan"><option value="">Freies Training</option>${db.plans.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("")}</select></div><div class="field"><label>Titel</label><input id="wname" placeholder="z. B. Push A"></div></div><div class="two" style="margin-top:9px"><div class="field"><label>Datum</label><input id="wdate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Pause</label><select id="pause"><option value="60">60 Sek.</option><option value="90">90 Sek.</option><option value="120">120 Sek.</option><option value="180">180 Sek.</option></select></div></div><div id="editor"></div></section></div>`}
 function lastSets(pid,eid){return db.workouts.filter(w=>(pid?w.planId===pid:true)&&w.exercises.some(e=>e.exerciseId===eid)).sort((a,b)=>new Date(b.date)-new Date(a.date))[0]?.exercises.find(e=>e.exerciseId===eid)?.sets||[]}
 function setRow(n,s={}){return `<div class="setrow"><span>${n}</span><input type="number" step=".5" value="${s.weight||""}" placeholder="kg"><input type="number" value="${s.reps||""}" placeholder="Wdh."><input type="number" min="0" max="10" step="1" value="${s.rir??""}" placeholder="RIR"><input type="checkbox" ${s.done?"checked":""}></div>`}
@@ -143,23 +213,60 @@ function periodStats(kind){
 function bodyChartPoints(){return db.bodyMetrics.slice().sort((a,b)=>new Date(a.date)-new Date(b.date)).map(x=>({date:x.date,value:+x.weight||0}))}
 function profilePage(){
   const recs=strengthRecords(),muscles=muscleStats(),months=periodStats("month"),years=periodStats("year");
-  return `<div class="grid">
-  <section class="card s4"><h2>Profil</h2><div class="form">
-    <div class="field"><label>Profilfoto</label><input id="profilePhoto" type="file" accept="image/*"></div>
-    ${db.profile.photo?`<img src="${db.profile.photo}" alt="Profilfoto" style="width:120px;height:120px;object-fit:cover;border-radius:20px;border:1px solid var(--line)">`:""}
-    <div class="two"><div class="field"><label>Größe (cm)</label><input id="height" type="number" value="${db.profile.height||""}"></div><div class="field"><label>Alter</label><input id="age" type="number" value="${db.profile.age||""}"></div></div>
-    <div class="two"><div class="field"><label>Aktuelles Gewicht (kg)</label><input id="profileWeight" type="number" step=".1" value="${db.profile.weight||""}"></div><div class="field"><label>Zielgewicht (kg)</label><input id="goalWeight" type="number" step=".1" value="${db.profile.goalWeight||""}"></div></div>
-    <button class="btn primary" id="saveProfileData">Profil speichern</button><button class="btn danger profile-logout" id="profileLogout">Abmelden</button>
-  </div></section>
-  <section class="card s8"><h2>Körpergewichtsverlauf</h2><div class="two"><div class="field"><label>Datum</label><input id="weightDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Gewicht (kg)</label><input id="weightValue" type="number" step=".1"></div></div><button class="btn primary" id="addWeight" style="margin-top:9px">Gewicht eintragen</button><div class="canvas"><canvas id="bodyChart"></canvas></div>${db.bodyMetrics.length?`<div class="list">${db.bodyMetrics.slice().reverse().slice(0,8).map(x=>`<div class="row"><b>${fmt(x.date)}</b><span>${x.weight} kg</span></div>`).join("")}</div>`:"<div class='muted'>Noch keine Gewichtsdaten.</div>"}</section>
-  <section class="card s6"><h2>Umfangsmessungen</h2><div class="form"><div class="field"><label>Datum</label><input id="measureDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="two"><div class="field"><label>Brust (cm)</label><input id="chest" type="number" step=".1"></div><div class="field"><label>Taille (cm)</label><input id="waist" type="number" step=".1"></div></div><div class="two"><div class="field"><label>Arm (cm)</label><input id="arm" type="number" step=".1"></div><div class="field"><label>Oberschenkel (cm)</label><input id="thigh" type="number" step=".1"></div></div><button class="btn primary" id="addMeasurement">Messung speichern</button></div>${db.measurements.length?`<div class="list" style="margin-top:10px">${db.measurements.slice().reverse().slice(0,6).map(x=>`<div class="row"><div><b>${fmt(x.date)}</b><div class="row-sub">Brust ${x.chest||"-"} · Taille ${x.waist||"-"} · Arm ${x.arm||"-"} · Bein ${x.thigh||"-"} cm</div></div></div>`).join("")}</div>`:""}</section>
-  <section class="card s6"><h2>Fortschrittsfotos</h2><div class="form"><div class="field"><label>Datum</label><input id="photoDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Foto</label><input id="progressPhoto" type="file" accept="image/*"></div><button class="btn primary" id="addProgressPhoto">Foto hinzufügen</button></div><div class="photo-grid">${db.progressPhotos.slice().reverse().map((x,i)=>`<figure><img src="${x.data}" alt="Fortschrittsfoto"><figcaption>${fmt(x.date)}</figcaption></figure>`).join("")}</div></section>
-  <section class="card s6"><h2>Kraftrekorde</h2>${recs.length?`<div class="list">${recs.slice(0,12).map(r=>`<div class="row"><div><b>${esc(r.name)}</b><div class="row-sub">${r.date?fmt(r.date):""}</div></div><span class="pill">${r.best} kg × ${r.bestReps}</span></div>`).join("")}</div>`:"<div class='muted'>Noch keine Rekorde.</div>"}</section>
-  <section class="card s6"><h2>Muskelgruppen-Auswertung</h2>${muscles.length?`<div class="list">${muscles.map(([m,v])=>`<div class="row"><b>${esc(m)}</b><span class="pill">${Math.round(v)} kg Workload</span></div>`).join("")}</div>`:"<div class='muted'>Noch keine Daten.</div>"}</section>
-  <section class="card s6"><h2>Monatsstatistik</h2>${months.length?`<div class="list">${months.slice(0,12).map(([k,v])=>`<div class="row"><div><b>${k}</b><div class="row-sub">${v.count} Trainings · ${v.sets} Sätze</div></div><span class="pill">${Math.round(v.load)} kg</span></div>`).join("")}</div>`:"<div class='muted'>Noch keine Daten.</div>"}</section>
-  <section class="card s6"><h2>Jahresstatistik</h2>${years.length?`<div class="list">${years.map(([k,v])=>`<div class="row"><div><b>${k}</b><div class="row-sub">${v.count} Trainings · ${v.sets} Sätze</div></div><span class="pill">${Math.round(v.load)} kg</span></div>`).join("")}</div>`:"<div class='muted'>Noch keine Daten.</div>"}</section>
+  const displayName=profile?.display_name||user?.email?.split("@")[0]||"Athlet";
+  return `<div class="profile-dashboard">
+    <section class="card profile-hero glass-card">
+      <div class="profile-top">
+        <label class="avatar-wrap">
+          ${db.profile.photo?`<img src="${db.profile.photo}" alt="Profilfoto">`:`<span>PA</span>`}
+          <input id="profilePhoto" type="file" accept="image/*" hidden>
+          <i>📷</i>
+        </label>
+        <div><h2>${esc(displayName)}</h2><p>Eisen. Stark. Unaufhaltbar.</p></div>
+      </div>
+      <div class="profile-metrics">
+        <div><b>${db.profile.height||"–"}${db.profile.height?" cm":""}</b><span>Größe</span></div>
+        <div><b>${db.profile.age||"–"}</b><span>Alter</span></div>
+        <div><b>${db.profile.weight||"–"}${db.profile.weight?" kg":""}</b><span>Gewicht</span></div>
+        <div><b>${db.profile.goalWeight||"–"}${db.profile.goalWeight?" kg":""}</b><span>Zielgewicht</span></div>
+      </div>
+      <details class="profile-edit">
+        <summary>Profildaten bearbeiten</summary>
+        <div class="two"><div class="field"><label>Größe (cm)</label><input id="height" type="number" value="${db.profile.height||""}"></div><div class="field"><label>Alter</label><input id="age" type="number" value="${db.profile.age||""}"></div></div>
+        <div class="two"><div class="field"><label>Gewicht (kg)</label><input id="profileWeight" type="number" step=".1" value="${db.profile.weight||""}"></div><div class="field"><label>Zielgewicht (kg)</label><input id="goalWeight" type="number" step=".1" value="${db.profile.goalWeight||""}"></div></div>
+        <button class="btn primary" id="saveProfileData">Profil speichern</button>
+      </details>
+    </section>
+
+    <section class="profile-menu glass-card card">
+      <button data-scroll="weightSection"><span>↗</span><div><b>Körpergewichtsverlauf</b><small>Verlauf anzeigen</small></div><i>›</i></button>
+      <button data-scroll="measurementSection"><span>⌁</span><div><b>Umfangsmessungen</b><small>Brust, Taille, Arm, Oberschenkel</small></div><i>›</i></button>
+      <button data-scroll="photosSection"><span>▧</span><div><b>Fortschrittsfotos</b><small>Deine Transformation</small></div><i>›</i></button>
+      <button data-scroll="recordsSection"><span>♜</span><div><b>Kraftrekorde</b><small>Persönliche Bestleistungen</small></div><i>›</i></button>
+      <button data-scroll="muscleSection"><span>◒</span><div><b>Muskelgruppen-Auswertung</b><small>Workload nach Muskelgruppen</small></div><i>›</i></button>
+      <button data-scroll="statsSection"><span>▥</span><div><b>Statistiken</b><small>Monatlich & jährlich</small></div><i>›</i></button>
+    </section>
+
+    <section class="card glass-card sync-panel"><span>☁</span><b>Synchronisiert</b><small>Deine Daten sind aktuell</small></section>
+    <button class="btn profile-logout" id="profileLogout">⇥ &nbsp; Abmelden</button>
+
+    <section id="weightSection" class="card glass-card profile-detail"><h2>Körpergewichtsverlauf</h2><div class="two"><div class="field"><label>Datum</label><input id="weightDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Gewicht (kg)</label><input id="weightValue" type="number" step=".1"></div></div><button class="btn primary" id="addWeight">Gewicht eintragen</button><div class="canvas"><canvas id="bodyChart"></canvas></div></section>
+
+    <section id="measurementSection" class="card glass-card profile-detail"><h2>Umfangsmessungen</h2><div class="form"><div class="field"><label>Datum</label><input id="measureDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="two"><div class="field"><label>Brust (cm)</label><input id="chest" type="number" step=".1"></div><div class="field"><label>Taille (cm)</label><input id="waist" type="number" step=".1"></div></div><div class="two"><div class="field"><label>Arm (cm)</label><input id="arm" type="number" step=".1"></div><div class="field"><label>Oberschenkel (cm)</label><input id="thigh" type="number" step=".1"></div></div><button class="btn primary" id="addMeasurement">Messung speichern</button></div>${db.measurements.length?`<div class="list detail-list">${db.measurements.slice().reverse().slice(0,6).map(x=>`<div class="row"><b>${fmt(x.date)}</b><span>${x.chest||"-"} / ${x.waist||"-"} / ${x.arm||"-"} / ${x.thigh||"-"} cm</span></div>`).join("")}</div>`:""}</section>
+
+    <section id="photosSection" class="card glass-card profile-detail"><h2>Fortschrittsfotos</h2><div class="two"><div class="field"><label>Datum</label><input id="photoDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Foto</label><input id="progressPhoto" type="file" accept="image/*"></div></div><button class="btn primary" id="addProgressPhoto">Foto hinzufügen</button><div class="photo-grid">${db.progressPhotos.slice().reverse().map(x=>`<figure><img src="${x.data}" alt="Fortschrittsfoto"><figcaption>${fmt(x.date)}</figcaption></figure>`).join("")}</div></section>
+
+    <section id="recordsSection" class="card glass-card profile-detail"><h2>Kraftrekorde</h2>${recs.length?`<div class="list">${recs.slice(0,12).map(r=>`<div class="row"><div><b>${esc(r.name)}</b><div class="row-sub">${r.date?fmt(r.date):""}</div></div><span class="pill">${r.best} kg × ${r.bestReps}</span></div>`).join("")}</div>`:`<div class="muted">Noch keine Rekorde.</div>`}</section>
+
+    <section id="muscleSection" class="card glass-card profile-detail"><h2>Muskelgruppen-Auswertung</h2>${muscles.length?`<div class="list">${muscles.map(([m,v])=>`<div class="row"><b>${esc(m)}</b><span class="pill">${Math.round(v).toLocaleString("de-DE")} kg</span></div>`).join("")}</div>`:`<div class="muted">Noch keine Daten.</div>`}</section>
+
+    <section id="statsSection" class="profile-stats-grid">
+      <section class="card glass-card profile-detail"><h2>Monatsstatistik</h2>${months.length?`<div class="list">${months.slice(0,12).map(([k,v])=>`<div class="row"><div><b>${k}</b><div class="row-sub">${v.count} Trainings · ${v.sets} Sätze</div></div><span class="pill">${Math.round(v.load).toLocaleString("de-DE")} kg</span></div>`).join("")}</div>`:`<div class="muted">Noch keine Daten.</div>`}</section>
+      <section class="card glass-card profile-detail"><h2>Jahresstatistik</h2>${years.length?`<div class="list">${years.map(([k,v])=>`<div class="row"><div><b>${k}</b><div class="row-sub">${v.count} Trainings · ${v.sets} Sätze</div></div><span class="pill">${Math.round(v.load).toLocaleString("de-DE")} kg</span></div>`).join("")}</div>`:`<div class="muted">Noch keine Daten.</div>`}</section>
+    </section>
   </div>`
 }
+
 function resizeImage(file,max=1000,quality=.78){
   return new Promise((resolve,reject)=>{const img=new Image(),r=new FileReader();r.onload=()=>{img.onload=()=>{const ratio=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*ratio);c.height=Math.round(img.height*ratio);c.getContext("2d").drawImage(img,0,0,c.width,c.height);resolve(c.toDataURL("image/jpeg",quality))};img.onerror=reject;img.src=r.result};r.onerror=reject;r.readAsDataURL(file)});
 }
@@ -184,6 +291,7 @@ document.querySelectorAll(".share-workout").forEach(b=>b.onclick=()=>shareWorkou
 document.querySelectorAll(".import-shared").forEach(b=>b.onclick=()=>importShared(b.dataset.id));
 
 document.getElementById("profileBtn")?.addEventListener("click",()=>{page="profile";render()});
+document.querySelectorAll("[data-scroll]").forEach(b=>b.onclick=()=>document.getElementById(b.dataset.scroll)?.scrollIntoView({behavior:"smooth",block:"start"}));
 document.getElementById("profileLogout")?.addEventListener("click",async()=>{await sb.auth.signOut();user=null;render()});
 document.getElementById("saveProfileData")?.addEventListener("click",async()=>{
   db.profile.height=document.getElementById("height").value;
