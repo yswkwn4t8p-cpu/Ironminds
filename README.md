@@ -27,3 +27,17 @@ Sauber neu aufgebaute Version mit stabilem Login, Supabase-Sync, täglichem Spru
 - Kraftrekorde, Muskelgruppen sowie Monats- und Jahresstatistiken sind dort gebündelt
 - oberer Schriftzug im Hintergrundbereich wird überblendet
 - unterer Schriftzug lautet Ironminds und ist vollständig sichtbar
+
+## Neu in v4.4 Clean
+
+- Reihenfolge der Übungen im Trainingsplan anpassbar
+- Übungen können nach oben oder unten verschoben werden
+- Reihenfolge wird gespeichert und beim Training übernommen
+- vorhandene Pläne behalten ihre Reihenfolge beim Bearbeiten
+
+## Neu in v4.5 Clean
+
+- ein einziges Stresslevel für das gesamte Training
+- Stresslevel wird erst beim Trainingsabschluss abgefragt
+- Wochenstatistik mit Trainingsanzahl, Sätzen, Workload und durchschnittlichem Stresslevel
+- Stresslevel wird in der Trainingshistorie angezeigt

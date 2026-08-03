@@ -85,18 +85,109 @@ function workout(){return `<div class="card"><h2>Training</h2><div class="two"><
 function lastSets(pid,eid){return db.workouts.filter(w=>w.planId===pid).sort((a,b)=>new Date(b.date)-new Date(a.date))[0]?.exercises.find(e=>e.exerciseId===eid)?.sets||[]}
 function setRow(n,s={}){return `<div class="setrow"><span>${n}</span><input type="number" step=".5" value="${s.weight||""}" placeholder="kg"><input type="number" value="${s.reps||""}" placeholder="Wdh."><input type="number" min="0" max="10" value="${s.rir||""}" placeholder="RIR"><input type="checkbox"></div>`}
 function loadPlan(){const id=document.getElementById("plan").value,p=db.plans.find(x=>x.id===id),ids=p?p.exerciseIds:db.exercises.map(e=>e.id);document.getElementById("wname").value=p?.name||"";document.getElementById("editor").innerHTML=`<div class="card" style="margin-top:10px">${ids.map(id=>{const e=db.exercises.find(x=>x.id===id),last=lastSets(id?document.getElementById("plan").value:"",id),pres=p?.prescriptions?.find(x=>x.exerciseId===id),sets=last.length?last:Array.from({length:pres?.sets||1},()=>({reps:pres?.reps||""}));return `<div class="workout-ex" data-e="${id}"><b>${esc(e.name)}</b>${pres?`<div class="notice">${pres.sets} Sätze × ${pres.reps} Wdh.</div>`:""}<div class="sethead"><span>#</span><span>Gewicht</span><span>Wdh.</span><span>RIR</span><span>✓</span></div>${sets.map((s,i)=>setRow(i+1,s)).join("")}</div>`}).join("")}<div class="field"><label>Notiz</label><textarea id="note"></textarea></div><button class="btn good" id="finish">Training abschließen</button></div>`;document.getElementById("finish").onclick=finish}
-function finish(){const ex=[...document.querySelectorAll(".workout-ex")].map(b=>({exerciseId:b.dataset.e,sets:[...b.querySelectorAll(".setrow")].map(r=>{const i=r.querySelectorAll("input");return{weight:i[0].value,reps:i[1].value,rir:i[2].value}}).filter(s=>s.weight||s.reps)})).filter(e=>e.sets.length);if(!ex.length)return toast("Bitte Sätze eintragen");const modal=document.createElement("div");modal.className="modal";modal.innerHTML=`<div class="card modal-card"><h2>Stresslevel zum Abschluss</h2><div class="list">${ex.map(e=>`<div class="stress-row" data-e="${e.exerciseId}"><b>${esc(db.exercises.find(x=>x.id===e.exerciseId)?.name)}</b><div class="stress-control"><input type="range" min="1" max="10" value="5"><span>5</span></div></div>`).join("")}</div><div style="margin-top:12px"><button class="btn" id="cancel">Abbrechen</button> <button class="btn good" id="saveWorkout">Speichern</button></div></div>`;document.body.appendChild(modal);modal.querySelectorAll("input").forEach(i=>i.oninput=()=>i.nextElementSibling.textContent=i.value);modal.querySelector("#cancel").onclick=()=>modal.remove();modal.querySelector("#saveWorkout").onclick=async()=>{modal.querySelectorAll(".stress-row").forEach(r=>{ex.find(e=>e.exerciseId===r.dataset.e).stress=+r.querySelector("input").value});db.workouts.unshift({id:uid(),planId:document.getElementById("plan").value,name:document.getElementById("wname").value||"Training",date:document.getElementById("wdate").value,notes:document.getElementById("note").value,exercises:ex});save();await sync();modal.remove();page="home";render();toast("Training gespeichert")}}
+function finish(){
+  const exercises=[...document.querySelectorAll(".workout-ex")].map(box=>({
+    exerciseId:box.dataset.e,
+    sets:[...box.querySelectorAll(".setrow")].map(row=>{
+      const inputs=row.querySelectorAll("input");
+      return{
+        weight:inputs[0].value,
+        reps:inputs[1].value,
+        rir:inputs[2].value
+      }
+    }).filter(set=>set.weight||set.reps)
+  })).filter(exercise=>exercise.sets.length);
+
+  if(!exercises.length)return toast("Bitte Sätze eintragen");
+
+  const modal=document.createElement("div");
+  modal.className="modal";
+  modal.innerHTML=`<div class="card modal-card">
+    <h2>Training abschließen</h2>
+    <p class="muted">Wie hoch war dein gesamtes Stresslevel in diesem Training?</p>
+    <div class="overall-stress">
+      <input id="overallStress" type="range" min="1" max="10" value="5">
+      <div><span id="overallStressValue">5</span><small>von 10</small></div>
+    </div>
+    <div class="row-actions" style="margin-top:14px">
+      <button class="btn" id="cancel">Abbrechen</button>
+      <button class="btn good" id="saveWorkout">Training speichern</button>
+    </div>
+  </div>`;
+
+  document.body.appendChild(modal);
+
+  const stressInput=modal.querySelector("#overallStress");
+  const stressValue=modal.querySelector("#overallStressValue");
+  stressInput.oninput=()=>stressValue.textContent=stressInput.value;
+  modal.querySelector("#cancel").onclick=()=>modal.remove();
+
+  modal.querySelector("#saveWorkout").onclick=async()=>{
+    db.workouts.unshift({
+      id:uid(),
+      planId:document.getElementById("plan").value,
+      name:document.getElementById("wname").value||"Training",
+      date:document.getElementById("wdate").value,
+      notes:document.getElementById("note").value,
+      stress:+stressInput.value,
+      exercises
+    });
+    save();
+    await sync();
+    modal.remove();
+    page="home";
+    render();
+    toast("Training gespeichert");
+  };
+}
+
+function weeklyStats(){
+  const now=new Date();
+  const start=new Date(now);
+  const day=(now.getDay()+6)%7;
+  start.setDate(now.getDate()-day);
+  start.setHours(0,0,0,0);
+
+  const workouts=db.workouts.filter(workout=>{
+    const date=new Date(workout.date+"T12:00:00");
+    return date>=start;
+  });
+
+  return{
+    workouts:workouts.length,
+    sets:workouts.reduce((sum,workout)=>sum+workout.exercises.reduce((a,e)=>a+e.sets.length,0),0),
+    workload:workouts.reduce((sum,workout)=>sum+workload(workout),0),
+    avgStress:workouts.length
+      ? workouts.reduce((sum,workout)=>sum+(+workout.stress||0),0)/workouts.filter(workout=>workout.stress).length || 0
+      : 0
+  };
+}
+
 function history(){
   const records=strengthRecords();
   const muscles=muscleStats();
   const months=periodStats("month");
   const years=periodStats("year");
+  const week=weeklyStats();
   return `<div class="grid">
+    <section class="card s12 weekly-summary">
+      <div class="weekly-summary-head">
+        <h2>Wochenstatistik</h2>
+        <span>Aktuelle Woche</span>
+      </div>
+      <div class="weekly-summary-grid">
+        <div><b>${week.workouts}</b><span>Trainings</span></div>
+        <div><b>${week.sets}</b><span>Sätze</span></div>
+        <div><b>${Math.round(week.workload)} kg</b><span>Workload</span></div>
+        <div><b>${week.avgStress?week.avgStress.toFixed(1):"-"}</b><span>Ø Stresslevel</span></div>
+      </div>
+    </section>
+
     <section class="card s12">
       <h2>Historie & Fortschritt</h2>
       <div class="list">
         ${db.workouts.map(w=>`<div class="row">
-          <div><b>${esc(w.name)}</b><div class="row-sub">${fmt(w.date)} · ${w.exercises.length} Übungen</div></div>
+          <div><b>${esc(w.name)}</b><div class="row-sub">${fmt(w.date)} · ${w.exercises.length} Übungen${w.stress?` · Stress ${w.stress}/10`:""}</div></div>
           <span class="pill">${workload(w)} kg Workload</span>
         </div>`).join("")||'<div class="muted">Noch keine Trainings.</div>'}
       </div>
@@ -262,27 +353,95 @@ function profile(){
 async function sync(){if(!user)return;await sb.from("ironminds_data").upsert({user_id:user.id,data:db,updated_at:new Date().toISOString()},{onConflict:"user_id"})}
 async function loadCloud(){if(!user)return;const {data}=await sb.from("ironminds_data").select("data").eq("user_id",user.id).maybeSingle();if(data?.data){db=data.data;save()}else await sync();const p=await sb.from("profiles").select("*").eq("user_id",user.id).maybeSingle();profileRow=p.data;if(!profileRow){const code="IM-"+Math.random().toString(36).slice(2,8).toUpperCase();const r=await sb.from("profiles").insert({user_id:user.id,display_name:user.email.split("@")[0],friend_code:code}).select().single();profileRow=r.data}}
 async function doAuth(mode){const email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;if(!email||!password)return toast("E-Mail und Passwort eingeben");const r=mode==="signup"?await sb.auth.signUp({email,password}):await sb.auth.signInWithPassword({email,password});if(r.error)return toast(r.error.message);if(!r.data.session)return toast("Bitte E-Mail bestätigen");user=r.data.user;await loadCloud();render()}
+
+function selectedPlanOrder(){
+  return [...document.querySelectorAll("#planOrder .plan-order-item")].map(item=>item.dataset.id);
+}
+function refreshPlanOrderNumbers(){
+  document.querySelectorAll("#planOrder .plan-order-item").forEach((item,index)=>{
+    const number=item.querySelector(".order-number");
+    if(number)number.textContent=index+1;
+  });
+}
+function bindPlanOrderButtons(){
+  document.querySelectorAll(".move-up").forEach(button=>button.onclick=()=>{
+    const item=button.closest(".plan-order-item");
+    const previous=item?.previousElementSibling;
+    if(previous)item.parentElement.insertBefore(item,previous);
+    refreshPlanOrderNumbers();
+  });
+  document.querySelectorAll(".move-down").forEach(button=>button.onclick=()=>{
+    const item=button.closest(".plan-order-item");
+    const next=item?.nextElementSibling;
+    if(next)item.parentElement.insertBefore(next,item);
+    refreshPlanOrderNumbers();
+  });
+}
+function renderPlanOrder(orderIds){
+  const box=document.getElementById("planOrder");
+  if(!box)return;
+  const ids=orderIds?.length?orderIds:[...document.querySelectorAll(".pick:checked")].map(input=>input.value);
+  if(!ids.length){
+    box.innerHTML='<div class="muted">Wähle Übungen aus. Danach kannst du ihre Reihenfolge anpassen.</div>';
+    return;
+  }
+  box.innerHTML=ids.map((id,index)=>{
+    const exercise=db.exercises.find(item=>item.id===id);
+    return `<div class="plan-order-item" data-id="${id}">
+      <span class="order-number">${index+1}</span>
+      <b>${esc(exercise?.name||"Übung")}</b>
+      <div class="row-actions">
+        <button class="icon move-up" type="button" aria-label="Nach oben">↑</button>
+        <button class="icon move-down" type="button" aria-label="Nach unten">↓</button>
+      </div>
+    </div>`;
+  }).join("");
+  bindPlanOrderButtons();
+}
+
 function render(){app.innerHTML=user?shell(page==="home"?home():page==="workout"?workout():page==="history"?history():page==="plans"?plans():page==="exercises"?exercises():profile()):authPage();bind()}
-function bind(){document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{page=b.dataset.p;render()});document.getElementById("profileBtn")?.addEventListener("click",()=>{page="profile";render()});document.getElementById("login")?.addEventListener("click",()=>doAuth("login"));document.getElementById("signup")?.addEventListener("click",()=>doAuth("signup"));document.getElementById("plan")?.addEventListener("change",loadPlan);if(document.getElementById("plan"))loadPlan();document.getElementById("savePlan")?.addEventListener("click",async()=>{
+function bind(){document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{page=b.dataset.p;render()});document.getElementById("profileBtn")?.addEventListener("click",()=>{page="profile";render()});document.getElementById("login")?.addEventListener("click",()=>doAuth("login"));document.getElementById("signup")?.addEventListener("click",()=>doAuth("signup"));document.getElementById("plan")?.addEventListener("change",loadPlan);if(document.getElementById("plan"))loadPlan();document.querySelectorAll(".pick").forEach(input=>input.addEventListener("change",()=>{
+  const current=selectedPlanOrder();
+  if(input.checked){
+    if(!current.includes(input.value))current.push(input.value);
+  }else{
+    const index=current.indexOf(input.value);
+    if(index>=0)current.splice(index,1);
+  }
+  renderPlanOrder(current);
+}));
+document.getElementById("savePlan")?.addEventListener("click",async()=>{
   const name=document.getElementById("pname").value.trim();
-  const selected=[...document.querySelectorAll(".pick:checked")];
-  if(!name||!selected.length)return toast("Name und Übungen auswählen");
-  const exerciseIds=selected.map(x=>x.value);
+  const checked=[...document.querySelectorAll(".pick:checked")];
+  if(!name||!checked.length)return toast("Name und Übungen auswählen");
+
+  const checkedIds=checked.map(input=>input.value);
+  let exerciseIds=selectedPlanOrder().filter(id=>checkedIds.includes(id));
+  checkedIds.forEach(id=>{if(!exerciseIds.includes(id))exerciseIds.push(id)});
+
   const prescriptions=exerciseIds.map(id=>({
     exerciseId:id,
     sets:+document.querySelector(`.sets[data-id="${id}"]`).value||3,
     reps:+document.querySelector(`.reps[data-id="${id}"]`).value||10
   }));
+
   const editId=document.getElementById("editPlanId").value;
   if(editId){
-    const plan=db.plans.find(p=>p.id===editId);
-    if(plan){plan.name=name;plan.exerciseIds=exerciseIds;plan.prescriptions=prescriptions}
+    const plan=db.plans.find(item=>item.id===editId);
+    if(plan){
+      plan.name=name;
+      plan.exerciseIds=exerciseIds;
+      plan.prescriptions=prescriptions;
+    }
     toast("Plan aktualisiert");
   }else{
     db.plans.push({id:uid(),name,exerciseIds,prescriptions});
     toast("Plan gespeichert");
   }
-  save();await sync();render()
+
+  save();
+  await sync();
+  render();
 });document.querySelectorAll(".startPlan").forEach(b=>b.onclick=()=>{page="workout";render();setTimeout(()=>{document.getElementById("plan").value=b.dataset.id;loadPlan()},20)});
 document.querySelectorAll(".editPlan").forEach(b=>b.onclick=()=>{
   const plan=db.plans.find(p=>p.id===b.dataset.id);
@@ -299,6 +458,7 @@ document.querySelectorAll(".editPlan").forEach(b=>b.onclick=()=>{
       document.querySelector(`.reps[data-id="${cb.value}"]`).value=prescription.reps;
     }
   });
+  renderPlanOrder(plan.exerciseIds);
   window.scrollTo({top:0,behavior:"smooth"});
 });
 document.querySelectorAll(".deletePlan").forEach(b=>b.onclick=async()=>{
