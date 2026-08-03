@@ -143,9 +143,9 @@ function home(){
     <section class="card exact-glass quick-access-card">
       <h3>Schnellzugriff</h3>
       <div class="quick-access-grid">
-        ${quickItems.map(([go,icon,label])=>`
+        ${quickItems.map(([go,iconName,label])=>`
           <button class="quick-access-item" data-go="${go}">
-            ${icon(icon,"quick-svg")}
+            ${icon(iconName,"quick-svg")}
             <b>${label}</b>
           </button>`).join("")}
       </div>
@@ -242,6 +242,7 @@ async function ensureProfile(){
     data=r.data;
   }
   profile=data;
+  if(profile?.display_name){db.profile.displayName=profile.display_name;saveLocal(db)}
 }
 async function loadSocial(){
   if(!user)return;

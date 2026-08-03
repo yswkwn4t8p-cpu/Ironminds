@@ -91,3 +91,10 @@ Fortschrittsfotos werden komprimiert und innerhalb des synchronisierten Ironmind
 - täglich wechselnder Motivationsspruch
 - kleiner Abmeldebutton oben rechts im Profil
 - alle bisherigen Trainings-, Freunde-, Statistik- und Supabase-Funktionen bleiben erhalten
+
+## Fehlerbehebung v4.0.1
+
+- leere Seite nach erfolgreicher Anmeldung behoben
+- SVG-Symbole auf der Startseite werden wieder korrekt geladen
+- fehlerhafte HTML-Schließung im Startbereich korrigiert
+- Profilname wird lokal und in Supabase synchron gehalten
