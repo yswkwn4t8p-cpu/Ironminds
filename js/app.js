@@ -12,26 +12,96 @@ let profile=null,friends=[],incomingRequests=[],outgoingRequests=[],sharedWorkou
 const app=document.getElementById("app");
 const esc=x=>String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const fmt=d=>new Date(d+"T12:00:00").toLocaleDateString("de-DE");
+
+const DAILY_QUOTES=[
+  "Das, was dich heute herausfordert, macht dich morgen stärker.",
+  "Disziplin schlägt Motivation, wenn Motivation nachlässt.",
+  "Jede Wiederholung bringt dich deinem Ziel näher.",
+  "Stärke entsteht, wenn du weitermachst, obwohl es schwer wird.",
+  "Dein einziges Limit ist das, das du dir selbst setzt.",
+  "Trainiere heute für die Version von dir, die du morgen sein willst.",
+  "Fortschritt beginnt außerhalb deiner Komfortzone.",
+  "Kleine Schritte werden zu großen Ergebnissen.",
+  "Du musst nicht perfekt sein. Du musst konsequent sein.",
+  "Der Schmerz vergeht. Der Stolz bleibt.",
+  "Erfolg ist die Summe vieler kleiner Trainingstage.",
+  "Dein Körper kann mehr, als dein Kopf dir manchmal sagt.",
+  "Nicht jeder Tag ist leicht. Jeder Tag zählt.",
+  "Konstanz formt Ergebnisse.",
+  "Stärker als gestern. Bereit für morgen.",
+  "Du trainierst nicht nur deinen Körper, sondern auch deinen Willen.",
+  "Heute investieren. Morgen profitieren.",
+  "Ein gutes Training beginnt mit der Entscheidung anzufangen.",
+  "Vergleiche dich nicht mit anderen, sondern mit deinem gestrigen Ich.",
+  "Ausreden verbrennen keine Kalorien.",
+  "Deine Ziele warten nicht. Fang an.",
+  "Schweiß ist nur der Beweis, dass du gearbeitet hast.",
+  "Wer immer nur bequem trainiert, bleibt immer gleich.",
+  "Bleib fokussiert. Bleib geduldig. Bleib stark.",
+  "Jeder Satz ist eine Stimme für dein zukünftiges Ich.",
+  "Du bist stärker, als du denkst.",
+  "Training verändert nicht nur den Körper, sondern auch den Kopf.",
+  "Der Weg ist lang. Genau deshalb lohnt er sich.",
+  "Heute zählt mehr als irgendwann.",
+  "Stärke wird aufgebaut, nicht gefunden.",
+  "Mach es für dich."
+];
+function dailyQuote(){
+  const now=new Date();
+  const start=new Date(now.getFullYear(),0,0);
+  const day=Math.floor((now-start)/86400000);
+  return DAILY_QUOTES[day%DAILY_QUOTES.length];
+}
+function greetingText(){
+  const h=new Date().getHours();
+  if(h<11)return "Guten Morgen,";
+  if(h<17)return "Guten Tag,";
+  return "Guten Abend,";
+}
+
+
+const ICONS={
+  home:'<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10.5V20h5v-6h4v6h5v-9.5"/>',
+  dumbbell:'<path d="M6.5 6.5v11"/><path d="M3.5 9v6"/><path d="M17.5 6.5v11"/><path d="M20.5 9v6"/><path d="M6.5 12h11"/>',
+  chart:'<path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M22 19H2"/>',
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M3 10h18"/>',
+  exercise:'<path d="M6 7v10"/><path d="M18 7v10"/><path d="M3 10v4"/><path d="M21 10v4"/><path d="M6 12h12"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  trend:'<path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
+  camera:'<path d="M14.5 4 16 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h3l1.5-3z"/><circle cx="12" cy="13" r="4"/>',
+  trophy:'<path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M5 5H3v2a4 4 0 0 0 4 4"/><path d="M19 5h2v2a4 4 0 0 1-4 4"/>',
+  muscle:'<path d="M7 13c1-4 3-6 6-6l2-3 2 2-1 4c2 1 4 3 4 6 0 3-2 5-5 5H8c-3 0-5-2-5-5 0-2 1-3 4-3z"/><path d="M10 13c1 1 2 2 2 4"/>',
+  scale:'<path d="M4 19a8 8 0 1 1 16 0"/><path d="m12 11 3-3"/><path d="M7 19h10"/>',
+  ruler:'<path d="M4 20 20 4"/><path d="m14 6 4 4"/><path d="m11 9 2 2"/><path d="m8 12 2 2"/><path d="m5 15 2 2"/>',
+  cloud:'<path d="M17.5 19H7a5 5 0 1 1 1.2-9.85A6 6 0 0 1 20 11a4 4 0 0 1-2.5 8z"/><path d="m9 13 2 2 4-4"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
+  share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-4"/><path d="m8.6 13.5 6.8 4"/>',
+  bell:'<path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1v.1H9.6V21a1.7 1.7 0 0 0-.4-1 1.7 1.7 0 0 0-1-.6 1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 3.8 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1-.4H2.1V9.6h.1a1.7 1.7 0 0 0 1-.4 1.7 1.7 0 0 0 .6-1 1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 8.2 3.8a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1V2.1h4v.1a1.7 1.7 0 0 0 .4 1 1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 20.2 8.2a1.7 1.7 0 0 0 .6 1 1.7 1.7 0 0 0 1 .4h.1v4h-.1a1.7 1.7 0 0 0-1 .4 1.7 1.7 0 0 0-.6 1z"/>'
+};
+function icon(name,cls=""){return `<svg class="icon-svg ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]||ICONS.home}</svg>`}
+
 function toast(text){const t=document.getElementById("toast");t.textContent=text;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)}
 function persist(){dirty=true;saveLocal(db)}
 function volume(){return Math.round(db.workouts.reduce((a,w)=>a+w.exercises.reduce((b,e)=>b+e.sets.reduce((c,s)=>c+(+s.weight||0)*(+s.reps||0),0),0),0))}
 function nav(){
   const ps=["home","workout","history","plans","exercises","profile"];
   const labels=["Home","Training","Historie","Pläne","Übungen","Profil"];
-  const icons=["⌂","🏋","▥","▣","⚒","♙"];
-  return `<nav class="tabs">${ps.map((p,i)=>`<button class="tab ${page===p?"active":""}" data-p="${p}">${labels[i]}</button>`).join("")}</nav>
-  <nav class="bottom">${ps.map((p,i)=>`<button class="${page===p?"active":""}" data-p="${p}"><b>${icons[i]}</b>${labels[i]}</button>`).join("")}</nav>`
+  const icons=["home","dumbbell","chart","calendar","exercise","user"];
+  return `<nav class="tabs">${ps.map((p,i)=>`<button class="tab ${page===p?"active":""}" data-p="${p}">${icon(icons[i],"tab-icon")}${labels[i]}</button>`).join("")}</nav>
+  <nav class="bottom">${ps.map((p,i)=>`<button class="${page===p?"active":""}" data-p="${p}">${icon(icons[i],"bottom-icon")}<span>${labels[i]}</span></button>`).join("")}</nav>`
 }
 function shell(body){
   return `<div class="app">
     <header class="glass-header">
       <div class="brand">
-        <div class="logo">PA</div>
+        <div class="logo pro-logo"><span>PA</span><i></i></div>
         <div class="brand-copy"><h1>IRONMINDS</h1><div class="sub">Disziplin. Fokus. Fortschritt.</div></div>
       </div>
       <div class="actions">
         <span id="syncState" class="sync">● synchronisiert</span>
-        <button class="icon header-profile" id="profileBtn" aria-label="Profil">♙</button>
+        <button class="icon header-profile" id="profileBtn" aria-label="Profil">${icon("user")}</button>
         <button class="btn hide-mobile" id="backup">Backup</button>
         <button class="btn header-logout" id="logout">Abmelden</button>
       </div>
@@ -39,7 +109,7 @@ function shell(body){
   </div>`
 }
 function home(){
-  const name=profile?.display_name||user?.email?.split("@")[0]||"Athlet";
+  const name=profile?.display_name||db.profile?.displayName||"Athlet";
   const latest=db.workouts[0];
   const now=new Date();
   const weekStart=new Date(now);
@@ -50,23 +120,23 @@ function home(){
   const weekSets=week.reduce((a,w)=>a+w.exercises.reduce((b,e)=>b+e.sets.length,0),0);
 
   const quickItems=[
-    ["workout","🏋","Training"],
-    ["plans","▣","Pläne"],
-    ["exercises","⚒","Übungen"],
-    ["history","▥","Historie"],
-    ["history","↗","Fortschritt"],
-    ["profile","♙","Profil"],
-    ["friends","♧","Freunde"],
-    ["profile","◔","Statistiken"]
+    ["workout","dumbbell","Training"],
+    ["plans","calendar","Pläne"],
+    ["exercises","exercise","Übungen"],
+    ["history","chart","Historie"],
+    ["history","trend","Fortschritt"],
+    ["profile","user","Profil"],
+    ["friends","users","Freunde"],
+    ["profile","chart","Statistiken"]
   ];
 
   return `<div class="home-screen">
     <section class="home-hero-exact">
       <div class="hero-overlay-exact"></div>
       <div class="hero-copy-exact">
-        <span class="hero-kicker">Guten Morgen,</span>
+        <span class="hero-kicker">${greetingText()}</span>
         <h2>${esc(name)}!</h2>
-        <p>„Das, was dich heute herausfordert, macht dich morgen stärker.“</p>
+        <p>„${esc(dailyQuote())}“</p>
       </div>
     </section>
 
@@ -75,7 +145,7 @@ function home(){
       <div class="quick-access-grid">
         ${quickItems.map(([go,icon,label])=>`
           <button class="quick-access-item" data-go="${go}">
-            <span>${icon}</span>
+            ${icon(icon,"quick-svg")}
             <b>${label}</b>
           </button>`).join("")}
       </div>
@@ -83,7 +153,7 @@ function home(){
 
     <section class="card exact-glass last-workout-card">
       <div class="exact-section-title">
-        <div><span class="section-icon">▣</span><h3>Letztes Training</h3></div>
+        <div>${icon("calendar","section-svg")}<h3>Letztes Training</h3></div>
         <span>${latest?fmt(latest.date):"–"}</span>
       </div>
       ${latest?`
@@ -96,7 +166,7 @@ function home(){
               <div><span>Workload</span><b>${workoutLoad(latest).toLocaleString("de-DE")} kg</b></div>
             </div>
           </div>
-          <div class="muscle-silhouette">◒</div>
+          <div class="muscle-silhouette">${icon("muscle","muscle-svg")}</div>
         </div>`:
         `<div class="empty-workout"><p>Noch kein Training gespeichert.</p><button class="btn primary" data-go="workout">Training starten</button></div>`}
     </section>
@@ -136,7 +206,7 @@ function editor(ids,pid){return `<div class="card" style="margin-top:12px"><h3>S
 function plans(){return `<div class="grid"><section class="card s6"><h2>Plan erstellen</h2><div class="form"><div class="field"><label>Planname</label><input id="pname" placeholder="z. B. Push A"></div><div class="field"><label>Übungen</label><div class="exercise-picker">${db.exercises.map(e=>`<label class="pick"><input type="checkbox" class="planpick" value="${e.id}"><span><b>${esc(e.name)}</b><br><span class="muted">${esc(e.muscle)}</span></span></label>`).join("")}</div></div><button class="btn primary" id="saveplan">Plan speichern</button></div></section><section class="card s6"><h2>Meine Pläne</h2>${db.plans.length?`<div class="list">${db.plans.map(p=>`<div class="row"><div><b>${esc(p.name)}</b><div class="row-sub">${p.exerciseIds.length} Übungen · ${db.workouts.filter(w=>w.planId===p.id).length} Trainings</div></div><div class="row-actions"><button class="icon start-plan" data-id="${p.id}">▶</button><button class="icon delete-plan" data-id="${p.id}">×</button></div></div>`).join("")}</div>`:`<div class="muted">Noch keine Pläne.</div>`}</section></div>`}
 function exercises(){return `<div class="grid"><section class="card s4"><h2>Übung hinzufügen</h2><div class="form"><div class="field"><label>Name</label><input id="ename"></div><div class="field"><label>Muskelgruppe</label><input id="muscle"></div><div class="field"><label>Typ</label><select id="etype"><option>Kraft</option><option>Körpergewicht</option><option>Cardio</option><option>Mobilität</option></select></div><button class="btn primary" id="saveex">Übung speichern</button></div></section><section class="card s8"><h2>Meine Übungen</h2><div class="list">${db.exercises.map(e=>`<div class="row"><div><b>${esc(e.name)}</b><div class="row-sub">${esc(e.muscle)} · ${esc(e.type)}</div></div><button class="icon delete-ex" data-id="${e.id}">×</button></div>`).join("")}</div></section></div>`}
 function workoutLoad(w){return Math.round(w.exercises.reduce((a,e)=>a+e.sets.reduce((b,s)=>b+(+s.weight||0)*(+s.reps||0),0),0))}
-function history(){const id=document.getElementById("hex")?.value||db.exercises[0]?.id,pts=pointsFor(id);return `<div class="grid"><section class="card s12"><h2>Historie & Fortschritt</h2><div class="field"><label>Übung</label><select id="hex">${db.exercises.map(e=>`<option value="${e.id}" ${e.id===id?"selected":""}>${esc(e.name)}</option>`).join("")}</select></div></section><section class="card s4"><h3>Bestleistung</h3><div style="font-size:34px;font-weight:900">${pts.length?Math.max(...pts.map(p=>p.max)):0} kg</div></section><section class="card s4"><h3>Einheiten</h3><div style="font-size:34px;font-weight:900">${pts.length}</div></section><section class="card s4"><h3>Letztes Gewicht</h3><div style="font-size:34px;font-weight:900">${pts.at(-1)?.max||0} kg</div></section><section class="card s6"><h3>Maximalgewicht</h3><div class="canvas"><canvas id="c1"></canvas></div></section><section class="card s6"><h3>Volumen</h3><div class="canvas"><canvas id="c2"></canvas></div></section><section class="card s12"><h3>Workload pro Training</h3>${db.workouts.length?`<div class="list">${db.workouts.map(w=>`<div class="row"><div><b>${esc(w.name)}</b><div class="row-sub">${fmt(w.date)} · ${w.exercises.length} Übungen</div></div><div class="row-actions"><span class="pill">${workoutLoad(w)} kg Workload</span><button class="icon share-workout" data-id="${w.id}">Teilen</button></div></div>`).join("")}</div>`:`<div class="muted">Noch keine Trainings.</div>`}</section><section class="card s12"><h3>Übungsfortschritt</h3>${pts.length?`<div class="list">${pts.slice().reverse().map(p=>`<div class="row"><b>${fmt(p.date)}</b><span>${p.max} kg · ${Math.round(p.volume)} kg Volumen</span></div>`).join("")}</div>`:`<div class="muted">Noch keine Daten.</div>`}</section></div>`}
+function history(){const id=document.getElementById("hex")?.value||db.exercises[0]?.id,pts=pointsFor(id);return `<div class="grid"><section class="card s12"><h2>Historie & Fortschritt</h2><div class="field"><label>Übung</label><select id="hex">${db.exercises.map(e=>`<option value="${e.id}" ${e.id===id?"selected":""}>${esc(e.name)}</option>`).join("")}</select></div></section><section class="card s4"><h3>Bestleistung</h3><div style="font-size:34px;font-weight:900">${pts.length?Math.max(...pts.map(p=>p.max)):0} kg</div></section><section class="card s4"><h3>Einheiten</h3><div style="font-size:34px;font-weight:900">${pts.length}</div></section><section class="card s4"><h3>Letztes Gewicht</h3><div style="font-size:34px;font-weight:900">${pts.at(-1)?.max||0} kg</div></section><section class="card s6"><h3>Maximalgewicht</h3><div class="canvas"><canvas id="c1"></canvas></div></section><section class="card s6"><h3>Volumen</h3><div class="canvas"><canvas id="c2"></canvas></div></section><section class="card s12"><h3>Workload pro Training</h3>${db.workouts.length?`<div class="list">${db.workouts.map(w=>`<div class="row"><div><b>${esc(w.name)}</b><div class="row-sub">${fmt(w.date)} · ${w.exercises.length} Übungen</div></div><div class="row-actions"><span class="pill">${workoutLoad(w)} kg Workload</span><button class="icon share-workout" data-id="${w.id}">${icon("share","share-svg")}<span>Teilen</span></button></div></div>`).join("")}</div>`:`<div class="muted">Noch keine Trainings.</div>`}</section><section class="card s12"><h3>Übungsfortschritt</h3>${pts.length?`<div class="list">${pts.slice().reverse().map(p=>`<div class="row"><b>${fmt(p.date)}</b><span>${p.max} kg · ${Math.round(p.volume)} kg Volumen</span></div>`).join("")}</div>`:`<div class="muted">Noch keine Daten.</div>`}</section></div>`}
 function pointsFor(id){const pts=[];db.workouts.slice().sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(w=>w.exercises.filter(e=>e.exerciseId===id).forEach(e=>{const s=e.sets.filter(x=>+x.weight&&+x.reps);if(s.length)pts.push({date:w.date,max:Math.max(...s.map(x=>+x.weight)),volume:s.reduce((a,x)=>a+(+x.weight)*(+x.reps),0)})}));return pts}
 function chart(id,pts,key){const c=document.getElementById(id);if(!c||!pts.length)return;const r=c.getBoundingClientRect(),d=devicePixelRatio||1,w=r.width,h=r.height;c.width=w*d;c.height=h*d;const x=c.getContext("2d");x.scale(d,d);const p=28,v=pts.map(a=>a[key]),mn=Math.min(...v),mx=Math.max(...v),range=mx-mn||1;x.strokeStyle="#e5e7eb";for(let i=0;i<4;i++){const y=p+(h-2*p)*i/3;x.beginPath();x.moveTo(p,y);x.lineTo(w-p,y);x.stroke()}x.strokeStyle="#2563eb";x.lineWidth=3;x.beginPath();pts.forEach((a,i)=>{const xx=p+(w-2*p)*i/Math.max(1,pts.length-1),yy=h-p-(h-2*p)*(a[key]-mn)/range;i?x.lineTo(xx,yy):x.moveTo(xx,yy)});x.stroke();x.fillStyle="#111827";x.fillText(mx+" kg",p,15)}
 
@@ -256,6 +326,10 @@ function profilePage(){
   const recs=strengthRecords(),muscles=muscleStats(),months=periodStats("month"),years=periodStats("year");
   const displayName=profile?.display_name||user?.email?.split("@")[0]||"Athlet";
   return `<div class="profile-dashboard">
+    <div class="profile-page-toolbar">
+      <h2>Profil</h2>
+      <button class="icon profile-mini-logout" id="profileLogout" aria-label="Abmelden">${icon("logout")}</button>
+    </div>
     <section class="card profile-hero glass-card">
       <div class="profile-top">
         <label class="avatar-wrap">
@@ -273,6 +347,7 @@ function profilePage(){
       </div>
       <details class="profile-edit">
         <summary>Profildaten bearbeiten</summary>
+        <div class="field profile-name-field"><label>Profilname</label><input id="profileDisplayName" value="${esc(profile?.display_name||"")}"></div>
         <div class="two"><div class="field"><label>Größe (cm)</label><input id="height" type="number" value="${db.profile.height||""}"></div><div class="field"><label>Alter</label><input id="age" type="number" value="${db.profile.age||""}"></div></div>
         <div class="two"><div class="field"><label>Gewicht (kg)</label><input id="profileWeight" type="number" step=".1" value="${db.profile.weight||""}"></div><div class="field"><label>Zielgewicht (kg)</label><input id="goalWeight" type="number" step=".1" value="${db.profile.goalWeight||""}"></div></div>
         <button class="btn primary" id="saveProfileData">Profil speichern</button>
@@ -280,16 +355,16 @@ function profilePage(){
     </section>
 
     <section class="profile-menu glass-card card">
-      <button data-scroll="weightSection"><span>↗</span><div><b>Körpergewichtsverlauf</b><small>Verlauf anzeigen</small></div><i>›</i></button>
-      <button data-scroll="measurementSection"><span>⌁</span><div><b>Umfangsmessungen</b><small>Brust, Taille, Arm, Oberschenkel</small></div><i>›</i></button>
-      <button data-scroll="photosSection"><span>▧</span><div><b>Fortschrittsfotos</b><small>Deine Transformation</small></div><i>›</i></button>
-      <button data-scroll="recordsSection"><span>♜</span><div><b>Kraftrekorde</b><small>Persönliche Bestleistungen</small></div><i>›</i></button>
-      <button data-scroll="muscleSection"><span>◒</span><div><b>Muskelgruppen-Auswertung</b><small>Workload nach Muskelgruppen</small></div><i>›</i></button>
-      <button data-scroll="statsSection"><span>▥</span><div><b>Statistiken</b><small>Monatlich & jährlich</small></div><i>›</i></button>
+      <button data-scroll="weightSection">${icon("scale","menu-svg")}<div><b>Körpergewichtsverlauf</b><small>Verlauf anzeigen</small></div><i>›</i></button>
+      <button data-scroll="measurementSection">${icon("ruler","menu-svg")}<div><b>Umfangsmessungen</b><small>Brust, Taille, Arm, Oberschenkel</small></div><i>›</i></button>
+      <button data-scroll="photosSection">${icon("camera","menu-svg")}<div><b>Fortschrittsfotos</b><small>Deine Transformation</small></div><i>›</i></button>
+      <button data-scroll="recordsSection">${icon("trophy","menu-svg")}<div><b>Kraftrekorde</b><small>Persönliche Bestleistungen</small></div><i>›</i></button>
+      <button data-scroll="muscleSection">${icon("muscle","menu-svg")}<div><b>Muskelgruppen-Auswertung</b><small>Workload nach Muskelgruppen</small></div><i>›</i></button>
+      <button data-scroll="statsSection">${icon("chart","menu-svg")}<div><b>Statistiken</b><small>Monatlich & jährlich</small></div><i>›</i></button>
     </section>
 
-    <section class="card glass-card sync-panel"><span>☁</span><b>Synchronisiert</b><small>Deine Daten sind aktuell</small></section>
-    <button class="btn profile-logout" id="profileLogout">⇥ &nbsp; Abmelden</button>
+    <section class="card glass-card sync-panel">${icon("cloud","sync-svg")}<b>Synchronisiert</b><small>Deine Daten sind aktuell</small></section>
+    
 
     <section id="weightSection" class="card glass-card profile-detail"><h2>Körpergewichtsverlauf</h2><div class="two"><div class="field"><label>Datum</label><input id="weightDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Gewicht (kg)</label><input id="weightValue" type="number" step=".1"></div></div><button class="btn primary" id="addWeight">Gewicht eintragen</button><div class="canvas"><canvas id="bodyChart"></canvas></div></section>
 
@@ -312,7 +387,7 @@ function resizeImage(file,max=1000,quality=.78){
   return new Promise((resolve,reject)=>{const img=new Image(),r=new FileReader();r.onload=()=>{img.onload=()=>{const ratio=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*ratio);c.height=Math.round(img.height*ratio);c.getContext("2d").drawImage(img,0,0,c.width,c.height);resolve(c.toDataURL("image/jpeg",quality))};img.onerror=reject;img.src=r.result};r.onerror=reject;r.readAsDataURL(file)});
 }
 
-function authPage(){return `<div class="app"><div class="card auth"><div class="logo">PA</div><h2 style="text-align:center;margin-top:12px">Ironminds</h2><p class="muted" style="text-align:center">Dein Fitnesstagebuch auf allen Geräten.</p><div class="form"><div class="field"><label>E-Mail</label><input id="email" type="email"></div><div class="field"><label>Passwort</label><input id="password" type="password"></div><button class="btn primary" id="login">Anmelden</button><button class="btn" id="signup">Konto erstellen</button><button class="btn" id="reset">Passwort zurücksetzen</button><div class="notice">Nach der Anmeldung werden deine Daten zwischen Handy und PC synchronisiert.</div></div></div></div>`}
+function authPage(){return `<div class="app"><div class="card auth"><div class="logo pro-logo"><span>PA</span><i></i></div><h2 style="text-align:center;margin-top:12px">Ironminds</h2><p class="muted" style="text-align:center">Dein Fitnesstagebuch auf allen Geräten.</p><div class="form"><div class="field"><label>E-Mail</label><input id="email" type="email"></div><div class="field"><label>Passwort</label><input id="password" type="password"></div><button class="btn primary" id="login">Anmelden</button><button class="btn" id="signup">Konto erstellen</button><button class="btn" id="reset">Passwort zurücksetzen</button><div class="notice">Nach der Anmeldung werden deine Daten zwischen Handy und PC synchronisiert.</div></div></div></div>`}
 function setSync(text,off=false){const e=document.getElementById("syncState");if(e){e.textContent=text;e.classList.toggle("off",off)}}
 async function push(){if(!user)return;setSync("Synchronisiere…");const {error}=await sb.from("ironminds_data").upsert({user_id:user.id,data:db,updated_at:new Date().toISOString()},{onConflict:"user_id"});if(error){console.error(error);setSync("Offline",true)}else{dirty=false;setSync("● synchronisiert")}}
 async function pull(){if(!user)return;const {data,error}=await sb.from("ironminds_data").select("data").eq("user_id",user.id).maybeSingle();if(error){console.error(error);setSync("Offline",true);return}if(data?.data&&!dirty){db=data.data;saveLocal(db)}else await push()}
@@ -335,6 +410,10 @@ document.getElementById("profileBtn")?.addEventListener("click",()=>{page="profi
 document.querySelectorAll("[data-scroll]").forEach(b=>b.onclick=()=>document.getElementById(b.dataset.scroll)?.scrollIntoView({behavior:"smooth",block:"start"}));
 document.getElementById("profileLogout")?.addEventListener("click",async()=>{await sb.auth.signOut();user=null;render()});
 document.getElementById("saveProfileData")?.addEventListener("click",async()=>{
+  const displayName=document.getElementById("profileDisplayName")?.value.trim()||"Athlet";
+  db.profile.displayName=displayName;
+  const profileResult=await sb.from("profiles").update({display_name:displayName}).eq("user_id",user.id);
+  if(profileResult.error)return toast(profileResult.error.message);
   db.profile.height=document.getElementById("height").value;
   db.profile.age=document.getElementById("age").value;
   db.profile.weight=document.getElementById("profileWeight").value;

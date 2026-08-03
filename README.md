@@ -73,3 +73,21 @@ Fortschrittsfotos werden komprimiert und innerhalb des synchronisierten Ironmind
 - letztes Training mit Kennzahlen
 - Wochenübersicht mit Mini-Visualisierungen
 - stärkerer transparenter Glassmorphism-Look
+
+## Neu in v3.6
+
+- einheitliche SVG-Outline-Icons statt Emojis und Unicode-Symbolen
+- Navigation optisch an den Entwurf angepasst
+- passende Icons für Training, Pläne, Übungen, Historie, Profil und Freunde
+- neue Symbole für Körpergewicht, Maße, Fotos, Rekorde und Muskelgruppen
+- einheitliche rote Akzentfarbe und scharfe Darstellung auf allen Geräten
+
+## Neu in v4.0
+
+- professionell gestaltetes PA-Logo mit rotem Ring und Glow
+- Profilname ist direkt im Profil bearbeitbar
+- Begrüßung auf der Startseite zeigt immer den Profilnamen
+- Tageszeitabhängige Begrüßung: Guten Morgen, Guten Tag oder Guten Abend
+- täglich wechselnder Motivationsspruch
+- kleiner Abmeldebutton oben rechts im Profil
+- alle bisherigen Trainings-, Freunde-, Statistik- und Supabase-Funktionen bleiben erhalten
