@@ -88,7 +88,133 @@ function loadPlan(){const id=document.getElementById("plan").value,p=db.plans.fi
 function finish(){const ex=[...document.querySelectorAll(".workout-ex")].map(b=>({exerciseId:b.dataset.e,sets:[...b.querySelectorAll(".setrow")].map(r=>{const i=r.querySelectorAll("input");return{weight:i[0].value,reps:i[1].value,rir:i[2].value}}).filter(s=>s.weight||s.reps)})).filter(e=>e.sets.length);if(!ex.length)return toast("Bitte Sätze eintragen");const modal=document.createElement("div");modal.className="modal";modal.innerHTML=`<div class="card modal-card"><h2>Stresslevel zum Abschluss</h2><div class="list">${ex.map(e=>`<div class="stress-row" data-e="${e.exerciseId}"><b>${esc(db.exercises.find(x=>x.id===e.exerciseId)?.name)}</b><div class="stress-control"><input type="range" min="1" max="10" value="5"><span>5</span></div></div>`).join("")}</div><div style="margin-top:12px"><button class="btn" id="cancel">Abbrechen</button> <button class="btn good" id="saveWorkout">Speichern</button></div></div>`;document.body.appendChild(modal);modal.querySelectorAll("input").forEach(i=>i.oninput=()=>i.nextElementSibling.textContent=i.value);modal.querySelector("#cancel").onclick=()=>modal.remove();modal.querySelector("#saveWorkout").onclick=async()=>{modal.querySelectorAll(".stress-row").forEach(r=>{ex.find(e=>e.exerciseId===r.dataset.e).stress=+r.querySelector("input").value});db.workouts.unshift({id:uid(),planId:document.getElementById("plan").value,name:document.getElementById("wname").value||"Training",date:document.getElementById("wdate").value,notes:document.getElementById("note").value,exercises:ex});save();await sync();modal.remove();page="home";render();toast("Training gespeichert")}}
 function history(){return `<div class="card"><h2>Historie</h2><div class="list">${db.workouts.map(w=>`<div class="row"><div><b>${esc(w.name)}</b><div class="row-sub">${fmt(w.date)}</div></div><span class="pill">${workload(w)} kg Workload</span></div>`).join("")||'<div class="muted">Noch keine Trainings.</div>'}</div></div>`}
 function exercises(){return `<div class="grid"><section class="card s4"><h2>Übung hinzufügen</h2><div class="form"><div class="field"><label>Name</label><input id="ename"></div><div class="field"><label>Muskelgruppe</label><input id="muscle"></div><button class="btn primary" id="saveExercise">Speichern</button></div></section><section class="card s8"><h2>Übungen</h2><div class="list">${db.exercises.map(e=>`<div class="row"><b>${esc(e.name)}</b><span>${esc(e.muscle)}</span></div>`).join("")}</div></section></div>`}
-function profile(){return `<div class="grid"><section class="card s12"><div class="profile-toolbar"><h2>Profil</h2><button class="icon danger" id="logout">${icon("logout")}</button></div><div class="profile-main">${db.profile.photo?`<img class="avatar" src="${db.profile.photo}">`:`<div class="logo"><span>PA</span></div>`}<div><h2>${esc(name())}</h2><div class="muted">Eisen. Stark. Unaufhaltbar.</div></div></div><div class="profile-metrics"><div><b>${db.profile.height||"-"}</b><span>Größe</span></div><div><b>${db.profile.age||"-"}</b><span>Alter</span></div><div><b>${db.profile.weight||"-"}</b><span>Gewicht</span></div><div><b>${db.profile.goalWeight||"-"}</b><span>Ziel</span></div></div><div class="form" style="margin-top:14px"><div class="field"><label>Profilname</label><input id="displayName" value="${esc(name())}"></div><div class="two"><div class="field"><label>Größe</label><input id="height" value="${db.profile.height||""}"></div><div class="field"><label>Alter</label><input id="age" value="${db.profile.age||""}"></div></div><div class="two"><div class="field"><label>Gewicht</label><input id="weight" value="${db.profile.weight||""}"></div><div class="field"><label>Zielgewicht</label><input id="goalWeight" value="${db.profile.goalWeight||""}"></div></div><button class="btn primary" id="saveProfile">Profil speichern</button></div></section></div>`}
+
+function bodyPoints(){return (db.bodyMetrics||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date))}
+function strengthRecords(){
+  return db.exercises.map(ex=>{
+    let best=0,reps=0,date="";
+    db.workouts.forEach(w=>w.exercises.filter(e=>e.exerciseId===ex.id).forEach(e=>e.sets.forEach(set=>{
+      const weight=+set.weight||0,r=+set.reps||0;
+      if(weight>best||(weight===best&&r>reps)){best=weight;reps=r;date=w.date}
+    })));
+    return best?{name:ex.name,best,reps,date}:null;
+  }).filter(Boolean).sort((a,b)=>b.best-a.best);
+}
+function muscleStats(){
+  const map={};
+  db.workouts.forEach(w=>w.exercises.forEach(e=>{
+    const ex=db.exercises.find(x=>x.id===e.exerciseId);
+    const muscle=ex?.muscle||"Sonstige";
+    const load=e.sets.reduce((a,set)=>a+(+set.weight||0)*(+set.reps||0),0);
+    map[muscle]=(map[muscle]||0)+load;
+  }));
+  return Object.entries(map).sort((a,b)=>b[1]-a[1]);
+}
+function periodStats(type){
+  const map={};
+  db.workouts.forEach(w=>{
+    const d=new Date(w.date+"T12:00:00");
+    const key=type==="month"?`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`:`${d.getFullYear()}`;
+    map[key]=map[key]||{count:0,load:0,sets:0};
+    map[key].count++;
+    map[key].load+=workload(w);
+    map[key].sets+=w.exercises.reduce((a,e)=>a+e.sets.length,0);
+  });
+  return Object.entries(map).sort((a,b)=>b[0].localeCompare(a[0]));
+}
+function resizeImage(file,max=1000,quality=.75){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader(),img=new Image();
+    reader.onload=()=>{img.onload=()=>{const ratio=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*ratio);c.height=Math.round(img.height*ratio);c.getContext("2d").drawImage(img,0,0,c.width,c.height);resolve(c.toDataURL("image/jpeg",quality))};img.onerror=reject;img.src=reader.result};
+    reader.onerror=reject;reader.readAsDataURL(file);
+  });
+}
+function drawBodyChart(){
+  const c=document.getElementById("bodyChart"),pts=bodyPoints();
+  if(!c||!pts.length)return;
+  const r=c.getBoundingClientRect(),d=devicePixelRatio||1,w=r.width,h=r.height;
+  c.width=w*d;c.height=h*d;
+  const x=c.getContext("2d");x.scale(d,d);
+  const p=28,vals=pts.map(a=>+a.weight),mn=Math.min(...vals),mx=Math.max(...vals),range=mx-mn||1;
+  x.strokeStyle="rgba(255,255,255,.12)";
+  for(let i=0;i<4;i++){const y=p+(h-2*p)*i/3;x.beginPath();x.moveTo(p,y);x.lineTo(w-p,y);x.stroke()}
+  x.strokeStyle="#ef3437";x.lineWidth=3;x.beginPath();
+  pts.forEach((a,i)=>{const xx=p+(w-2*p)*i/Math.max(1,pts.length-1),yy=h-p-(h-2*p)*((+a.weight)-mn)/range;i?x.lineTo(xx,yy):x.moveTo(xx,yy)});
+  x.stroke();x.fillStyle="#fff";x.fillText(`${mx} kg`,p,15);
+}
+
+function profile(){
+  const records=strengthRecords(),muscles=muscleStats(),months=periodStats("month"),years=periodStats("year");
+  return `<div class="grid">
+    <section class="card s12">
+      <div class="profile-toolbar"><h2>Profil</h2><button class="icon danger" id="logout">${icon("logout")}</button></div>
+      <div class="profile-main">
+        ${db.profile.photo?`<img class="avatar" src="${db.profile.photo}">`:`<div class="logo"><span>PA</span></div>`}
+        <div><h2>${esc(name())}</h2><div class="muted">Eisen. Stark. Unaufhaltbar.</div></div>
+      </div>
+      <div class="profile-metrics">
+        <div><b>${db.profile.height||"-"}</b><span>Größe</span></div>
+        <div><b>${db.profile.age||"-"}</b><span>Alter</span></div>
+        <div><b>${db.profile.weight||"-"}</b><span>Gewicht</span></div>
+        <div><b>${db.profile.goalWeight||"-"}</b><span>Ziel</span></div>
+      </div>
+      <div class="form" style="margin-top:14px">
+        <div class="field"><label>Profilname</label><input id="displayName" value="${esc(name())}"></div>
+        <div class="field"><label>Profilfoto</label><input id="profilePhoto" type="file" accept="image/*"></div>
+        <div class="two"><div class="field"><label>Größe</label><input id="height" value="${db.profile.height||""}"></div><div class="field"><label>Alter</label><input id="age" value="${db.profile.age||""}"></div></div>
+        <div class="two"><div class="field"><label>Gewicht</label><input id="weight" value="${db.profile.weight||""}"></div><div class="field"><label>Zielgewicht</label><input id="goalWeight" value="${db.profile.goalWeight||""}"></div></div>
+        <button class="btn primary" id="saveProfile">Profil speichern</button>
+      </div>
+    </section>
+
+    <section class="card s6">
+      <h2>Körpergewichtsverlauf</h2>
+      <div class="two"><div class="field"><label>Datum</label><input id="weightDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Gewicht (kg)</label><input id="weightValue" type="number" step=".1"></div></div>
+      <button class="btn primary" id="addWeight" style="margin-top:8px">Gewicht eintragen</button>
+      <div class="chart-wrap"><canvas id="bodyChart"></canvas></div>
+      <div class="list">${(db.bodyMetrics||[]).slice().reverse().slice(0,8).map(x=>`<div class="row"><b>${fmt(x.date)}</b><span>${x.weight} kg</span></div>`).join("")||'<div class="muted">Noch keine Daten.</div>'}</div>
+    </section>
+
+    <section class="card s6">
+      <h2>Umfangsmessungen</h2>
+      <div class="form">
+        <div class="field"><label>Datum</label><input id="measureDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+        <div class="two"><div class="field"><label>Brust</label><input id="chest" type="number" step=".1"></div><div class="field"><label>Taille</label><input id="waist" type="number" step=".1"></div></div>
+        <div class="two"><div class="field"><label>Arm</label><input id="arm" type="number" step=".1"></div><div class="field"><label>Oberschenkel</label><input id="thigh" type="number" step=".1"></div></div>
+        <button class="btn primary" id="addMeasurement">Messung speichern</button>
+      </div>
+      <div class="list">${(db.measurements||[]).slice().reverse().slice(0,6).map(x=>`<div class="row"><div><b>${fmt(x.date)}</b><div class="row-sub">Brust ${x.chest||"-"} · Taille ${x.waist||"-"} · Arm ${x.arm||"-"} · Bein ${x.thigh||"-"} cm</div></div></div>`).join("")}</div>
+    </section>
+
+    <section class="card s6">
+      <h2>Fortschrittsfotos</h2>
+      <div class="two"><div class="field"><label>Datum</label><input id="photoDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Foto</label><input id="progressPhoto" type="file" accept="image/*"></div></div>
+      <button class="btn primary" id="addProgressPhoto" style="margin-top:8px">Foto hinzufügen</button>
+      <div class="photo-grid">${(db.progressPhotos||[]).slice().reverse().map(x=>`<figure><img src="${x.data}"><figcaption>${fmt(x.date)}</figcaption></figure>`).join("")}</div>
+    </section>
+
+    <section class="card s6">
+      <h2>Kraftrekorde</h2>
+      <div class="list">${records.map(r=>`<div class="row"><div><b>${esc(r.name)}</b><div class="row-sub">${fmt(r.date)}</div></div><span class="pill">${r.best} kg × ${r.reps}</span></div>`).join("")||'<div class="muted">Noch keine Rekorde.</div>'}</div>
+    </section>
+
+    <section class="card s6">
+      <h2>Muskelgruppen-Auswertung</h2>
+      <div class="list">${muscles.map(([m,v])=>`<div class="row"><b>${esc(m)}</b><span class="pill">${Math.round(v)} kg</span></div>`).join("")||'<div class="muted">Noch keine Daten.</div>'}</div>
+    </section>
+
+    <section class="card s6">
+      <h2>Monatsstatistik</h2>
+      <div class="list">${months.map(([k,v])=>`<div class="row"><div><b>${k}</b><div class="row-sub">${v.count} Trainings · ${v.sets} Sätze</div></div><span class="pill">${Math.round(v.load)} kg</span></div>`).join("")||'<div class="muted">Noch keine Daten.</div>'}</div>
+    </section>
+
+    <section class="card s6">
+      <h2>Jahresstatistik</h2>
+      <div class="list">${years.map(([k,v])=>`<div class="row"><div><b>${k}</b><div class="row-sub">${v.count} Trainings · ${v.sets} Sätze</div></div><span class="pill">${Math.round(v.load)} kg</span></div>`).join("")||'<div class="muted">Noch keine Daten.</div>'}</div>
+    </section>
+  </div>`
+}
+
 async function sync(){if(!user)return;await sb.from("ironminds_data").upsert({user_id:user.id,data:db,updated_at:new Date().toISOString()},{onConflict:"user_id"})}
 async function loadCloud(){if(!user)return;const {data}=await sb.from("ironminds_data").select("data").eq("user_id",user.id).maybeSingle();if(data?.data){db=data.data;save()}else await sync();const p=await sb.from("profiles").select("*").eq("user_id",user.id).maybeSingle();profileRow=p.data;if(!profileRow){const code="IM-"+Math.random().toString(36).slice(2,8).toUpperCase();const r=await sb.from("profiles").insert({user_id:user.id,display_name:user.email.split("@")[0],friend_code:code}).select().single();profileRow=r.data}}
 async function doAuth(mode){const email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;if(!email||!password)return toast("E-Mail und Passwort eingeben");const r=mode==="signup"?await sb.auth.signUp({email,password}):await sb.auth.signInWithPassword({email,password});if(r.error)return toast(r.error.message);if(!r.data.session)return toast("Bitte E-Mail bestätigen");user=r.data.user;await loadCloud();render()}
@@ -135,6 +261,36 @@ document.querySelectorAll(".deletePlan").forEach(b=>b.onclick=async()=>{
   db.plans=db.plans.filter(p=>p.id!==b.dataset.id);
   save();await sync();render();toast("Plan gelöscht");
 });
-document.getElementById("cancelEditPlan")?.addEventListener("click",()=>render());document.getElementById("saveExercise")?.addEventListener("click",async()=>{const name=document.getElementById("ename").value.trim();if(!name)return;db.exercises.push({id:uid(),name,muscle:document.getElementById("muscle").value||"Sonstige",type:"Kraft"});save();await sync();render()});document.getElementById("saveProfile")?.addEventListener("click",async()=>{const displayName=document.getElementById("displayName").value.trim()||"Athlet";db.profile.displayName=displayName;db.profile.height=document.getElementById("height").value;db.profile.age=document.getElementById("age").value;db.profile.weight=document.getElementById("weight").value;db.profile.goalWeight=document.getElementById("goalWeight").value;await sb.from("profiles").update({display_name:displayName}).eq("user_id",user.id);if(profileRow)profileRow.display_name=displayName;save();await sync();render()});document.getElementById("logout")?.addEventListener("click",async()=>{await sb.auth.signOut();user=null;render()})}
+document.getElementById("cancelEditPlan")?.addEventListener("click",()=>render());document.getElementById("saveExercise")?.addEventListener("click",async()=>{const name=document.getElementById("ename").value.trim();if(!name)return;db.exercises.push({id:uid(),name,muscle:document.getElementById("muscle").value||"Sonstige",type:"Kraft"});save();await sync();render()});document.getElementById("saveProfile")?.addEventListener("click",async()=>{
+  const displayName=document.getElementById("displayName").value.trim()||"Athlet";
+  db.profile.displayName=displayName;
+  db.profile.height=document.getElementById("height").value;
+  db.profile.age=document.getElementById("age").value;
+  db.profile.weight=document.getElementById("weight").value;
+  db.profile.goalWeight=document.getElementById("goalWeight").value;
+  const photo=document.getElementById("profilePhoto").files[0];
+  if(photo)db.profile.photo=await resizeImage(photo,600,.8);
+  await sb.from("profiles").update({display_name:displayName}).eq("user_id",user.id);
+  if(profileRow)profileRow.display_name=displayName;
+  save();await sync();render();toast("Profil gespeichert")
+});
+document.getElementById("addWeight")?.addEventListener("click",async()=>{
+  const weight=document.getElementById("weightValue").value;
+  if(!weight)return toast("Gewicht fehlt");
+  db.bodyMetrics.push({id:uid(),date:document.getElementById("weightDate").value,weight});
+  db.profile.weight=weight;
+  save();await sync();render();toast("Gewicht gespeichert")
+});
+document.getElementById("addMeasurement")?.addEventListener("click",async()=>{
+  db.measurements.push({id:uid(),date:document.getElementById("measureDate").value,chest:document.getElementById("chest").value,waist:document.getElementById("waist").value,arm:document.getElementById("arm").value,thigh:document.getElementById("thigh").value});
+  save();await sync();render();toast("Messung gespeichert")
+});
+document.getElementById("addProgressPhoto")?.addEventListener("click",async()=>{
+  const file=document.getElementById("progressPhoto").files[0];
+  if(!file)return toast("Bitte Foto auswählen");
+  db.progressPhotos.push({id:uid(),date:document.getElementById("photoDate").value,data:await resizeImage(file)});
+  save();await sync();render();toast("Foto gespeichert")
+});
+if(page==="profile")setTimeout(drawBodyChart,20);document.getElementById("logout")?.addEventListener("click",async()=>{await sb.auth.signOut();user=null;render()})}
 async function init(){if(!sb){app.innerHTML='<div class="app"><div class="card auth"><h2>Ironminds</h2><div class="notice">Supabase konnte nicht geladen werden. Bitte Internetverbindung prüfen.</div></div></div>';return}try{const {data:{session}}=await sb.auth.getSession();user=session?.user||null;if(user)await loadCloud();render()}catch(err){console.error(err);app.innerHTML='<div class="app"><div class="card auth"><h2>Ironminds</h2><div class="notice">Startfehler: '+esc(err.message)+'</div></div></div>'}}
 init();
