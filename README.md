@@ -114,3 +114,10 @@ Fortschrittsfotos werden komprimiert und innerhalb des synchronisierten Ironmind
 - Startablauf mit Fehlerbehandlung abgesichert
 - Service Worker lädt HTML, CSS und JavaScript bevorzugt aus dem Netzwerk
 - alte, nicht zusammenpassende Cache-Dateien werden automatisch gelöscht
+
+## Fehlerbehebung v4.1.2
+
+- alte Codefragmente hinter dem Trainingseditor entfernt
+- alte Codefragmente hinter der Planansicht entfernt
+- Startfehler werden auf dem Ladebildschirm sichtbar angezeigt
+- neue Cache-Version erzwingt das Laden der korrigierten App-Datei

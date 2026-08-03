@@ -1,4 +1,4 @@
-const CACHE="ironminds-v4.1.1";
+const CACHE="ironminds-v4.1.2";
 const STATIC=[
   "./manifest.webmanifest",
   "./assets/fitness-background.jpg"

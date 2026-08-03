@@ -7,4 +7,14 @@
     <p id="startupMessage">Anmeldung wird geladen …</p>
   </div>
 </div>
-<div id="toast" class="toast"></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="document.getElementById('startupMessage').textContent='Supabase konnte nicht geladen werden. Bitte Internetverbindung prüfen und die Seite neu laden.'"></script><script type="module" src="js/app.js?v=4.1.1"></script></body></html>
+<div id="toast" class="toast"></div><script>
+window.addEventListener('error',function(event){
+  const message=document.getElementById('startupMessage');
+  if(message)message.textContent='Startfehler: '+(event.message||'Unbekannter Fehler');
+});
+window.addEventListener('unhandledrejection',function(event){
+  const message=document.getElementById('startupMessage');
+  if(message)message.textContent='Startfehler: '+(event.reason?.message||event.reason||'Unbekannter Fehler');
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="document.getElementById('startupMessage').textContent='Supabase konnte nicht geladen werden. Bitte Internetverbindung prüfen und die Seite neu laden.'"></script><script type="module" src="js/app.js?v=4.1.2"></script></body></html>
