@@ -1,190 +1,33 @@
-<!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#111827">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Fitnesstagebuch</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <style>
-    :root{--bg:#f4f6f8;--card:#fff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--accent:#2563eb;--accent2:#1d4ed8;--danger:#dc2626;--ok:#059669;--shadow:0 8px 30px rgba(15,23,42,.07)}
-    *{box-sizing:border-box} html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
-    button,input,select,textarea{font:inherit} button{cursor:pointer}
-    .app{max-width:1100px;margin:auto;padding:18px 18px 100px}
-    header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}
-    .brand{display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;border-radius:14px;background:var(--text);color:#fff;display:grid;place-items:center;font-weight:800}
-    h1{font-size:22px;margin:0}.sub{color:var(--muted);font-size:13px;margin-top:2px}
-    .actions{display:flex;gap:8px}.iconbtn,.btn{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:12px;padding:10px 13px}.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.danger{color:var(--danger)}
-    .tabs{display:flex;gap:6px;overflow:auto;padding:4px;background:#e9edf2;border-radius:15px;margin-bottom:18px}.tab{flex:1;min-width:95px;border:0;background:transparent;padding:11px;border-radius:11px;color:#4b5563}.tab.active{background:#fff;color:var(--text);box-shadow:0 2px 10px rgba(0,0,0,.06);font-weight:700}
-    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow)}.span12{grid-column:span 12}.span8{grid-column:span 8}.span6{grid-column:span 6}.span4{grid-column:span 4}
-    .hero{background:linear-gradient(135deg,#111827,#334155);color:#fff;border:0}.hero .muted{color:#cbd5e1}.hero h2{font-size:30px;margin:8px 0}.hero-row{display:flex;justify-content:space-between;align-items:end;gap:20px}
-    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{padding:14px;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:rgba(255,255,255,.07)}.stat b{display:block;font-size:22px}.stat span{font-size:12px;color:#cbd5e1}
-    h2,h3{margin:0 0 12px}.muted{color:var(--muted)}.small{font-size:12px}
-    .list{display:flex;flex-direction:column;gap:9px}.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--line);border-radius:13px}.row-main{min-width:0}.row-title{font-weight:700}.row-sub{color:var(--muted);font-size:13px;margin-top:2px}.row-actions{display:flex;gap:6px;flex-shrink:0}
-    .pill{display:inline-flex;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:11px;font-weight:700}.empty{padding:28px;text-align:center;color:var(--muted)}
-    .form{display:grid;gap:12px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:5px;color:#4b5563}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px;background:#fff;color:var(--text)}textarea{min-height:80px;resize:vertical}
-    .exercise-picker{max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:12px}.pick{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--line)}.pick:last-child{border-bottom:0}.pick input{width:18px;height:18px}
-    .set-row{display:grid;grid-template-columns:1.2fr .8fr .8fr auto;gap:7px;align-items:center}.set-row input{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px}.table-head{font-size:11px;color:var(--muted);display:grid;grid-template-columns:1.2fr .8fr .8fr auto;gap:7px;margin-bottom:4px}
-    .workout-ex{border:1px solid var(--line);border-radius:14px;padding:12px}.workout-ex+.workout-ex{margin-top:10px}.setlist{display:grid;gap:7px;margin-top:8px}
-    .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:11px 15px;border-radius:999px;opacity:0;pointer-events:none;transition:.2s;z-index:20}.toast.show{opacity:1}
-    .bottom-nav{display:none}
-    @media(max-width:700px){
-      .app{padding:14px 12px 92px}header{margin-bottom:12px}.actions .btn span{display:none}.grid{gap:10px}.span8,.span6,.span4{grid-column:span 12}.hero h2{font-size:25px}.stats{gap:7px}.stat{padding:10px}.stat b{font-size:18px}.tabs{display:none}
-      .bottom-nav{position:fixed;display:flex;bottom:0;overflow-x:auto;left:0;right:0;z-index:10;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:7px 5px calc(7px + env(safe-area-inset-bottom));justify-content:space-around}.bottom-nav button{border:0;background:transparent;color:#6b7280;font-size:11px;padding:5px}.bottom-nav button.active{color:var(--accent);font-weight:800}
-      .bottom-nav .navicon{font-size:19px;display:block;line-height:19px}.two{grid-template-columns:1fr}.set-row,.table-head{grid-template-columns:1fr 1fr 1fr auto}.set-row input:first-child{grid-column:span 3}.set-row button{grid-column:4;grid-row:1}
-    }
-  </style>
-</head>
-<body>
-<div class="app">
-  <header>
-    <div class="brand"><div class="logo">FT</div><div><h1>Fitnesstagebuch</h1><div class="sub">Dein Training. Deine Daten. Offline.</div></div></div>
-    <div class="actions"><button class="btn" id="exportBtn">⇩ <span>Export</span></button><button class="btn" id="importBtn">⇧ <span>Import</span></button><input id="importFile" type="file" accept="application/json" hidden></div>
-  </header>
-
-  <nav class="tabs" id="tabs">
-    <button class="tab active" data-page="home">Übersicht</button><button class="tab" data-page="workout">Training</button><button class="tab" data-page="history">Historie</button><button class="tab" data-page="plans">Pläne</button><button class="tab" data-page="exercises">Übungen</button>
-  </nav>
-
-  <main id="content"></main>
-</div>
-<div class="toast" id="toast"></div>
-<nav class="bottom-nav" id="bottomNav">
-  <button data-page="home" class="active"><span class="navicon">⌂</span>Home</button>
-  <button data-page="workout"><span class="navicon">▶</span>Training</button>
-  <button data-page="plans"><span class="navicon">☷</span>Pläne</button>
-  <button data-page="exercises"><span class="navicon">＋</span>Übungen</button>
-</nav>
-
+<!doctype html><html lang="de"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111827"><link rel="manifest" href="manifest.webmanifest"><title>Ironminds</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--accent:#2563eb;--good:#059669;--shadow:0 8px 30px #0f172a12}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}.app{max-width:1100px;margin:auto;padding:16px 16px 90px}header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.brand{display:flex;gap:12px;align-items:center}.logo{width:44px;height:44px;border-radius:14px;background:#111827;color:#fff;display:grid;place-items:center;font-weight:900}.brand h1{margin:0}.sub,.muted{color:var(--muted);font-size:12px}.actions{display:flex;gap:7px}.btn,.icon{border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 13px}.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.good{background:var(--good);color:#fff;border-color:var(--good)}.tabs{display:flex;gap:5px;background:#e9edf2;padding:4px;border-radius:14px;margin-bottom:15px}.tab{flex:1;border:0;background:transparent;padding:10px;border-radius:10px}.tab.active{background:#fff;font-weight:800}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}.card{background:#fff;border:1px solid var(--line);border-radius:17px;padding:16px;box-shadow:var(--shadow)}.s12{grid-column:span 12}.s8{grid-column:span 8}.s6{grid-column:span 6}.s4{grid-column:span 4}h2,h3{margin:0 0 10px}.hero{background:#111827;color:#fff;border:0}.hero-row{display:flex;justify-content:space-between;align-items:end;gap:15px}.hero .muted{color:#cbd5e1}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:15px}.stat{padding:11px;border:1px solid #ffffff1c;border-radius:12px}.stat b{display:block;font-size:20px}.list{display:grid;gap:8px}.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px;border:1px solid var(--line);border-radius:12px}.row-sub{font-size:12px;color:var(--muted)}.pill{padding:4px 8px;border-radius:99px;background:#eef2ff;color:#3730a3;font-size:11px;font-weight:800}.form{display:grid;gap:10px}.two{display:grid;grid-template-columns:1fr 1fr;gap:9px}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:4px}.field input,.field select,.field textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}.exercise-picker{max-height:250px;overflow:auto;border:1px solid var(--line);border-radius:11px}.pick{display:flex;gap:9px;padding:10px;border-bottom:1px solid var(--line)}.workout-ex{border:1px solid var(--line);border-radius:13px;padding:12px;margin-top:9px}.sethead,.setrow{display:grid;grid-template-columns:35px 1fr 1fr 1fr 35px;gap:6px;align-items:center}.sethead{font-size:10px;color:var(--muted);margin-top:9px}.setrow{margin-top:6px}.setrow input{width:100%;padding:8px;border:1px solid var(--line);border-radius:9px}.notice{margin-top:8px;padding:9px;border-radius:10px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-size:12px}.timer{text-align:center;font-size:30px;font-weight:900;padding:10px}.canvas{height:230px}.canvas canvas{width:100%;height:100%}.bottom{display:none}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 15px;border-radius:99px;opacity:0}.toast.show{opacity:1}
+@media(max-width:700px){.app{padding:12px 10px 85px}.tabs{display:none}.s4,.s6,.s8{grid-column:span 12}.hero-row{display:block}.stats{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.bottom{position:fixed;display:flex;bottom:0;left:0;right:0;background:#fffffff7;border-top:1px solid var(--line);z-index:5;justify-content:space-around;padding:5px}.bottom button{border:0;background:transparent;font-size:10px}.bottom b{display:block;font-size:18px}.actions span{display:none}}
+</style></head><body><div class="app">
+<header><div class="brand"><div class="logo">IM</div><div><h1>Ironminds</h1><div class="sub">Train smart. Track everything.</div></div></div><div class="actions"><button class="btn" id="exp">⇩ <span>Backup</span></button><button class="btn" id="imp">⇧ <span>Import</span></button><input id="file" type="file" accept=".json" hidden></div></header>
+<nav class="tabs"><button class="tab active" data-p="home">Übersicht</button><button class="tab" data-p="workout">Training</button><button class="tab" data-p="history">Historie</button><button class="tab" data-p="plans">Pläne</button><button class="tab" data-p="exercises">Übungen</button></nav><main id="content"></main></div>
+<nav class="bottom"><button data-p="home">⌂<br>Home</button><button data-p="workout">▶<br>Training</button><button data-p="history">↗<br>Historie</button><button data-p="plans">☷<br>Pläne</button><button data-p="exercises">＋<br>Übungen</button></nav><div id="toast" class="toast"></div>
 <script>
-const KEY='fitnesstagebuch-v1';
-const seed={
-  exercises:[
-    {id:'e1',name:'Bankdrücken',muscle:'Brust',type:'Kraft'},
-    {id:'e2',name:'Kniebeugen',muscle:'Beine',type:'Kraft'},
-    {id:'e3',name:'Kreuzheben',muscle:'Rücken',type:'Kraft'},
-    {id:'e4',name:'Schulterdrücken',muscle:'Schultern',type:'Kraft'},
-    {id:'e5',name:'Klimmzüge',muscle:'Rücken',type:'Körpergewicht'},
-    {id:'e6',name:'Bizeps-Curls',muscle:'Arme',type:'Kraft'}
-  ],
-  plans:[],
-  workouts:[]
-};
-let db=JSON.parse(localStorage.getItem(KEY)||'null')||seed;
-let page='home';
-
-function save(){localStorage.setItem(KEY,JSON.stringify(db));}
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
-function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function fmtDate(d){return new Date(d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})}
-function toast(s){let t=document.getElementById('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
-function setPage(p){page=p;document.querySelectorAll('.tab,.bottom-nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render()}
-
-function render(){
- const c=document.getElementById('content');
- if(page==='home') c.innerHTML=home();
- if(page==='workout') c.innerHTML=workoutPage();
- if(page==='history') c.innerHTML=historyPage();
- if(page==='plans') c.innerHTML=plansPage();
- if(page==='exercises') c.innerHTML=exercisesPage();
- bind();
-}
-function home(){
- const last=db.workouts[0], total=db.workouts.length, sets=db.workouts.reduce((n,w)=>n+w.exercises.reduce((a,e)=>a+e.sets.length,0),0), volume=db.workouts.reduce((n,w)=>n+w.exercises.reduce((a,e)=>a+e.sets.reduce((s,x)=>s+(Number(x.weight)||0)*(Number(x.reps)||0),0),0),0);
- return `<div class="grid">
-  <section class="card hero span12"><div class="hero-row"><div><div class="muted small">FITNESS-TAGEBUCH</div><h2>Bereit fürs nächste Training?</h2><div class="muted">Alles bleibt auf diesem Gerät gespeichert.</div></div><button class="btn primary" onclick="setPage('workout')">+ Training starten</button></div><div class="stats" style="margin-top:18px"><div class="stat"><b>${total}</b><span>Trainings</span></div><div class="stat"><b>${sets}</b><span>Sätze</span></div><div class="stat"><b>${db.exercises.length}</b><span>Übungen</span></div></div></section>
-  <section class="card span8"><h3>Letzte Trainings</h3>${last?`<div class="list">${db.workouts.slice(0,5).map(w=>`<div class="row"><div class="row-main"><div class="row-title">${esc(w.name||'Training')}</div><div class="row-sub">${fmtDate(w.date)} · ${w.exercises.length} Übungen</div></div><span class="pill">${w.exercises.reduce((a,e)=>a+e.sets.length,0)} Sätze</span></div>`).join('')}</div>`:`<div class="empty">Noch keine Trainings. Starte dein erstes Training.</div>`}</section>
-  <section class="card span4"><h3>Trainingsvolumen</h3><div style="font-size:30px;font-weight:800">${Math.round(volume)} kg</div><div class="muted">Gesamtvolumen aus allen gespeicherten Sätzen.</div></section><section class="card span4"><h3>Schnellzugriff</h3><div class="list"><button class="btn" onclick="setPage('workout')">＋ Training erfassen</button><button class="btn" onclick="setPage('history')">↗ Fortschritt ansehen</button><button class="btn" onclick="setPage('plans')">＋ Trainingsplan erstellen</button><button class="btn" onclick="setPage('exercises')">＋ Übung hinzufügen</button></div></section>
- </div>`;
-}
-function workoutPage(){
- return `<div class="grid"><section class="card span12"><h2>Training erfassen</h2><p class="muted">Wähle Übungen und dokumentiere Gewicht, Wiederholungen und Sätze.</p>
- <div class="form"><div class="two"><div class="field"><label>Name</label><input id="wName" placeholder="z. B. Push A"></div><div class="field"><label>Datum</label><input id="wDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div></div>
- <div class="field"><label>Übungen</label><div class="exercise-picker">${db.exercises.map(e=>`<label class="pick"><input type="checkbox" class="exPick" value="${e.id}"><div><b>${esc(e.name)}</b><div class="small muted">${esc(e.muscle)} · ${esc(e.type)}</div></div></label>`).join('')||'<div class="empty">Lege zuerst Übungen an.</div>'}</div></div>
- <button class="btn primary" id="buildWorkout">Übungen übernehmen</button><div id="workoutEditor"></div></div></section></div>`;
-}
-function plansPage(){
- return `<div class="grid"><section class="card span6"><h2>Neuer Trainingsplan</h2><div class="form"><div class="field"><label>Planname</label><input id="pName" placeholder="z. B. Ganzkörper 3x/Woche"></div><div class="field"><label>Übungen</label><div class="exercise-picker">${db.exercises.map(e=>`<label class="pick"><input type="checkbox" class="planPick" value="${e.id}"><div><b>${esc(e.name)}</b><div class="small muted">${esc(e.muscle)}</div></div></label>`).join('')}</div></div><button class="btn primary" id="savePlan">Plan speichern</button></div></section>
- <section class="card span6"><h2>Meine Pläne</h2>${db.plans.length?`<div class="list">${db.plans.map(p=>`<div class="row"><div class="row-main"><div class="row-title">${esc(p.name)}</div><div class="row-sub">${p.exerciseIds.length} Übungen</div></div><div class="row-actions"><button class="iconbtn" onclick="usePlan('${p.id}')">▶</button><button class="iconbtn" onclick="deletePlan('${p.id}')">×</button></div></div>`).join('')}</div>`:'<div class="empty">Noch keine Trainingspläne.</div>'}</section></div>`;
-}
-function historyPage(){
- const exerciseId=document.getElementById('histExercise')?.value || db.exercises[0]?.id || '';
- const ex=db.exercises.find(x=>x.id===exerciseId);
- const points=[];
- db.workouts.slice().reverse().forEach(w=>w.exercises.forEach(x=>{
-   if(x.exerciseId===exerciseId){
-     const valid=x.sets.filter(s=>Number(s.weight)>0 && Number(s.reps)>0);
-     if(valid.length){
-       const max=Math.max(...valid.map(s=>Number(s.weight)));
-       const volume=valid.reduce((a,s)=>a+Number(s.weight)*Number(s.reps),0);
-       points.push({date:w.date,max,volume});
-     }
-   }
- }));
- const maxAll=points.length?Math.max(...points.map(p=>p.max)):0;
- const volAll=points.length?Math.max(...points.map(p=>p.volume)):0;
- return `<div class="grid">
-  <section class="card span12"><h2>Trainingshistorie</h2><p class="muted">Verfolge deine Entwicklung pro Übung – Maximalgewicht und Trainingsvolumen.</p>
-  <div class="two"><div class="field"><label>Übung</label><select id="histExercise">${db.exercises.map(e=>`<option value="${e.id}" ${e.id===exerciseId?'selected':''}>${esc(e.name)}</option>`).join('')}</select></div><div class="field"><label>Zeitraum</label><select id="histRange"><option value="all">Alle Einträge</option><option value="10">Letzte 10</option><option value="20">Letzte 20</option></select></div></div></section>
-  <section class="card span4"><h3>Bestleistung</h3><div style="font-size:34px;font-weight:800">${maxAll||0} kg</div><div class="muted">höchstes dokumentiertes Gewicht</div></section>
-  <section class="card span4"><h3>Volumen-Bestwert</h3><div style="font-size:34px;font-weight:800">${Math.round(volAll||0)} kg</div><div class="muted">Gewicht × Wiederholungen</div></section>
-  <section class="card span4"><h3>Einheiten</h3><div style="font-size:34px;font-weight:800">${points.length}</div><div class="muted">Trainings mit dieser Übung</div></section>
-  <section class="card span6"><h3>Maximalgewicht</h3><div style="height:230px"><canvas id="weightChart" width="700" height="230" style="width:100%;height:100%"></canvas></div></section>
-  <section class="card span6"><h3>Trainingsvolumen</h3><div style="height:230px"><canvas id="volumeChart" width="700" height="230" style="width:100%;height:100%"></canvas></div></section>
-  <section class="card span12"><h3>Letzte Einträge</h3>${points.length?`<div class="list">${points.slice().reverse().map(p=>`<div class="row"><div><b>${fmtDate(p.date)}</b><div class="row-sub">${esc(ex?.name||'Übung')}</div></div><div><b>${p.max} kg</b><div class="row-sub">${Math.round(p.volume)} kg Volumen</div></div></div>`).join('')}</div>`:'<div class="empty">Noch keine verwertbaren Trainingsdaten für diese Übung.</div>'}</section>
- </div>`;
-}
-function drawLineChart(id, points, key, label){
- const c=document.getElementById(id); if(!c||!points.length)return;
- const ctx=c.getContext('2d'), dpr=devicePixelRatio||1, rect=c.getBoundingClientRect();
- c.width=rect.width*dpr;c.height=rect.height*dpr;ctx.scale(dpr,dpr);
- const w=rect.width,h=rect.height,p=28;
- ctx.clearRect(0,0,w,h);ctx.strokeStyle='#e5e7eb';ctx.lineWidth=1;
- for(let i=0;i<4;i++){let y=p+(h-2*p)*i/3;ctx.beginPath();ctx.moveTo(p,y);ctx.lineTo(w-p,y);ctx.stroke()}
- const vals=points.map(x=>Number(x[key])), min=Math.min(...vals),max=Math.max(...vals),range=max-min||1;
- ctx.strokeStyle='#2563eb';ctx.lineWidth=3;ctx.beginPath();
- points.forEach((pt,i)=>{let x=p+(w-2*p)*(i/Math.max(points.length-1,1));let y=h-p-(h-2*p)*(Number(pt[key])-min)/range;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
- ctx.stroke();
- ctx.fillStyle='#111827';ctx.font='12px system-ui';
- ctx.fillText(`${max}${key==='max'?' kg':' kg'}`,p,16);
- if(points.length>1){ctx.fillText(fmtDate(points[0].date),p,h-5);ctx.fillText(fmtDate(points.at(-1).date),Math.max(p,w-p-70),h-5)}
-}
-
-function exercisesPage(){
- return `<div class="grid"><section class="card span4"><h2>Übung hinzufügen</h2><div class="form"><div class="field"><label>Name</label><input id="eName" placeholder="z. B. Rudern"></div><div class="two"><div class="field"><label>Muskelgruppe</label><input id="eMuscle" placeholder="Rücken"></div><div class="field"><label>Typ</label><select id="eType"><option>Kraft</option><option>Körpergewicht</option><option>Cardio</option><option>Mobilität</option></select></div></div><button class="btn primary" id="saveExercise">Übung speichern</button></div></section>
- <section class="card span8"><h2>Meine Übungen</h2><div class="list">${db.exercises.map(e=>`<div class="row"><div class="row-main"><div class="row-title">${esc(e.name)}</div><div class="row-sub">${esc(e.muscle)} · ${esc(e.type)}</div></div><button class="iconbtn" onclick="deleteExercise('${e.id}')">×</button></div>`).join('')}</div></section></div>`;
-}
-function editorHTML(ids){
- return `<div class="card" style="margin-top:14px"><h3>Training speichern</h3>${ids.map(id=>{let e=db.exercises.find(x=>x.id===id);return `<div class="workout-ex" data-ex="${id}"><b>${esc(e.name)}</b><div class="table-head" style="margin-top:10px"><span>Gewicht (kg)</span><span>Wdh.</span><span>RPE</span><span></span></div><div class="setlist">${setRow()}</div><button class="btn" style="margin-top:8px" onclick="addSet(this)">＋ Satz</button></div>`}).join('')}<div class="field" style="margin-top:12px"><label>Notiz</label><textarea id="wNote" placeholder="Wie lief das Training?"></textarea></div><button class="btn primary" id="saveWorkout" style="margin-top:8px">Training speichern</button></div>`;
-}
-function setRow(){return `<div class="set-row"><input type="number" step="0.5" placeholder="kg"><input type="number" placeholder="Wdh."><input type="number" step="0.5" placeholder="RPE"><button class="iconbtn" onclick="this.parentElement.remove()">×</button></div>`}
-function addSet(btn){btn.previousElementSibling.insertAdjacentHTML('beforeend',setRow())}
-function usePlan(id){let p=db.plans.find(x=>x.id===id);setPage('workout');setTimeout(()=>{document.querySelectorAll('.exPick').forEach(x=>x.checked=p.exerciseIds.includes(x.value));document.getElementById('wName').value=p.name;document.getElementById('buildWorkout').click()},0)}
-function deletePlan(id){db.plans=db.plans.filter(x=>x.id!==id);save();render();toast('Plan gelöscht')}
-function deleteExercise(id){if(db.workouts.some(w=>w.exercises.some(e=>e.exerciseId===id))){toast('Übung wird von einem Training verwendet');return}db.exercises=db.exercises.filter(x=>x.id!==id);save();render();toast('Übung gelöscht')}
-
-function bind(){
- document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>setPage(b.dataset.page));
- const be=document.getElementById('buildWorkout'); if(be) be.onclick=()=>{let ids=[...document.querySelectorAll('.exPick:checked')].map(x=>x.value);if(!ids.length){toast('Bitte mindestens eine Übung wählen');return}document.getElementById('workoutEditor').innerHTML=editorHTML(ids)};
- const sw=document.getElementById('saveWorkout'); if(sw) sw.onclick=saveWorkout;
- const sp=document.getElementById('savePlan'); if(sp) sp.onclick=()=>{let name=document.getElementById('pName').value.trim();let ids=[...document.querySelectorAll('.planPick:checked')].map(x=>x.value);if(!name||!ids.length){toast('Name und Übungen auswählen');return}db.plans.unshift({id:uid(),name,exerciseIds:ids});save();render();toast('Plan gespeichert')};
- const he=document.getElementById('histExercise'); if(he) he.onchange=()=>{render();};
- const hr=document.getElementById('histRange'); if(hr) hr.onchange=()=>{render();};
- if(page==='history'){setTimeout(()=>{const id=document.getElementById('histExercise')?.value;const pts=[];db.workouts.slice().reverse().forEach(w=>{w.exercises.forEach(x=>{if(x.exerciseId===id){const valid=x.sets.filter(s=>Number(s.weight)>0&&Number(s.reps)>0);if(valid.length){pts.push({date:w.date,max:Math.max(...valid.map(s=>Number(s.weight))),volume:valid.reduce((a,s)=>a+Number(s.weight)*Number(s.reps),0)});}}});});drawLineChart('weightChart',pts,'max','kg');drawLineChart('volumeChart',pts,'volume','kg');},20)}
- const se=document.getElementById('saveExercise'); if(se) se.onclick=()=>{let name=document.getElementById('eName').value.trim();if(!name){toast('Bitte einen Namen eingeben');return}db.exercises.push({id:uid(),name,muscle:document.getElementById('eMuscle').value.trim()||'Sonstige',type:document.getElementById('eType').value});save();render();toast('Übung gespeichert')};
-}
-function saveWorkout(){
- let name=document.getElementById('wName').value.trim()||'Training', date=document.getElementById('wDate').value||new Date().toISOString().slice(0,10);
- let exercises=[...document.querySelectorAll('.workout-ex')].map(box=>({exerciseId:box.dataset.ex,sets:[...box.querySelectorAll('.set-row')].map(r=>{let v=r.querySelectorAll('input');return {weight:v[0].value,reps:v[1].value,rpe:v[2].value}}).filter(s=>s.weight||s.reps||s.rpe)})).filter(e=>e.sets.length);
- if(!exercises.length){toast('Bitte mindestens einen Satz eintragen');return}
- db.workouts.unshift({id:uid(),name,date,notes:document.getElementById('wNote').value,exercises});save();setPage('home');toast('Training gespeichert')}
-document.getElementById('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fitnesstagebuch-backup.json';a.click();URL.revokeObjectURL(a.href)};
-document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
-document.getElementById('importFile').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.exercises||!x.plans||!x.workouts)throw 0;db=x;save();render();toast('Backup importiert')}catch{toast('Ungültiges Backup')}};r.readAsText(f)};
-if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
-render();
-</script>
-</body>
-</html>
+const K='ironminds-v2',seed={exercises:[{id:'e1',name:'Bankdrücken',muscle:'Brust',type:'Kraft'},{id:'e2',name:'Kniebeugen',muscle:'Beine',type:'Kraft'},{id:'e3',name:'Kreuzheben',muscle:'Rücken',type:'Kraft'},{id:'e4',name:'Schulterdrücken',muscle:'Schultern',type:'Kraft'},{id:'e5',name:'Klimmzüge',muscle:'Rücken',type:'Körpergewicht'}],plans:[],workouts:[]};let db=JSON.parse(localStorage.getItem(K)||'null')||seed,page='home',timer;
+const esc=x=>String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])),uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2),save=()=>localStorage.setItem(K,JSON.stringify(db)),fmt=d=>new Date(d).toLocaleDateString('de-DE'),toast=x=>{let t=document.getElementById('toast');t.textContent=x;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)};
+function go(p){page=p;document.querySelectorAll('[data-p]').forEach(b=>b.classList.toggle('active',b.dataset.p===p));render()}
+function volume(){return Math.round(db.workouts.reduce((a,w)=>a+w.exercises.reduce((b,e)=>b+e.sets.reduce((c,s)=>c+(+s.weight||0)*(+s.reps||0),0),0),0))}
+function home(){return `<div class="grid"><section class="card hero s12"><div class="hero-row"><div><div class="muted">IRONMINDS</div><h2>Bereit fürs nächste Training?</h2><div class="muted">Deine letzten Gewichte werden automatisch vorausgefüllt.</div></div><button class="btn primary" onclick="go('workout')">＋ Training starten</button></div><div class="stats"><div class="stat"><b>${db.workouts.length}</b><span>Trainings</span></div><div class="stat"><b>${db.plans.length}</b><span>Pläne</span></div><div class="stat"><b>${volume()} kg</b><span>Volumen</span></div><div class="stat"><b>${db.exercises.length}</b><span>Übungen</span></div></div></section><section class="card s6"><h3>Letzte Trainings</h3>${db.workouts.length?`<div class="list">${db.workouts.slice(0,6).map(w=>`<div class="row"><div><b>${esc(w.name)}</b><div class="row-sub">${fmt(w.date)} · ${w.exercises.length} Übungen</div></div><span class="pill">${w.exercises.reduce((a,e)=>a+e.sets.length,0)} Sätze</span></div>`).join('')}</div>`:'<div class="muted">Noch keine Trainings.</div>'}</section><section class="card s6"><h3>Schnellzugriff</h3><div class="list"><button class="btn" onclick="go('plans')">☷ Pläne verwalten</button><button class="btn" onclick="go('history')">↗ Fortschritt ansehen</button><button class="btn" onclick="go('exercises')">＋ Übung anlegen</button></div></section></div>`}
+function workout(){return `<div class="grid"><section class="card s12"><h2>Training</h2><div class="two"><div class="field"><label>Trainingsplan</label><select id="plan"><option value="">Freies Training</option>${db.plans.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div><div class="field"><label>Titel</label><input id="wname" placeholder="z. B. Push A"></div></div><div class="two" style="margin-top:9px"><div class="field"><label>Datum</label><input id="wdate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Pause</label><select id="pause"><option value="60">60 Sek.</option><option value="90">90 Sek.</option><option value="120">120 Sek.</option><option value="180">180 Sek.</option></select></div></div><div id="editor"></div></section></div>`}
+function lastSets(pid,eid){let w=db.workouts.filter(w=>(pid?w.planId===pid:true)&&w.exercises.some(e=>e.exerciseId===eid)).sort((a,b)=>new Date(b.date)-new Date(a.date))[0];return w?.exercises.find(e=>e.exerciseId===eid)?.sets||[]}
+function row(n,s={}){return `<div class="setrow"><span>${n}</span><input type="number" step=".5" value="${s.weight||''}" placeholder="kg"><input type="number" value="${s.reps||''}" placeholder="Wdh."><input type="number" step=".5" value="${s.rpe||''}" placeholder="RPE"><input type="checkbox" ${s.done?'checked':''}></div>`}
+function editor(ids,pid){return `<div class="card" style="margin-top:12px"><h3>Sätze</h3>${ids.map(id=>{let e=db.exercises.find(x=>x.id===id),last=lastSets(pid,id),ss=last.length?last:[{}];return `<div class="workout-ex" data-e="${id}"><b>${esc(e.name)}</b>${last.length?`<div class="notice">Letztes Training: ${last.map(s=>`${s.weight||'-'} kg × ${s.reps||'-'}`).join(' · ')} · vorausgefüllt</div>`:''}<div class="sethead"><span>#</span><span>Gewicht</span><span>Wdh.</span><span>RPE</span><span>✓</span></div><div class="sets">${ss.map((s,i)=>row(i+1,s)).join('')}</div><button class="btn" onclick="addSet(this)">＋ Satz</button></div>`}).join('')}<div class="field" style="margin-top:10px"><label>Notiz</label><textarea id="note" placeholder="Wie lief das Training?"></textarea></div><button class="btn" onclick="startTimer()">⏱ Pause starten</button> <button class="btn good" id="finish">✓ Training abschließen</button><div id="timer"></div></div>`}
+function addSet(b){let q=b.previousElementSibling;q.insertAdjacentHTML('beforeend',row(q.children.length+1))}
+function loadPlan(){let p=document.getElementById('plan').value,x=db.plans.find(p=>p.id===x?.id);let plan=db.plans.find(p=>p.id===document.getElementById('plan').value);if(plan){document.getElementById('wname').value=plan.name;document.getElementById('editor').innerHTML=editor(plan.exerciseIds,plan.id)}else document.getElementById('editor').innerHTML=editor(db.exercises.map(e=>e.id),'')}
+function finish(){let pid=document.getElementById('plan').value,ex=[...document.querySelectorAll('.workout-ex')].map(b=>({exerciseId:b.dataset.e,sets:[...b.querySelectorAll('.setrow')].map(r=>{let i=r.querySelectorAll('input');return{weight:i[0].value,reps:i[1].value,rpe:i[2].value,done:i[3].checked}}).filter(s=>s.weight||s.reps)})).filter(x=>x.sets.length);if(!ex.length)return toast('Bitte mindestens einen Satz eintragen');db.workouts.unshift({id:uid(),planId:pid,name:document.getElementById('wname').value||'Training',date:document.getElementById('wdate').value,notes:document.getElementById('note').value,exercises:ex});save();go('home');toast('Training gespeichert ✓')}
+function plans(){return `<div class="grid"><section class="card s6"><h2>Plan erstellen</h2><div class="form"><div class="field"><label>Planname</label><input id="pname" placeholder="z. B. Push A"></div><div class="field"><label>Übungen</label><div class="exercise-picker">${db.exercises.map(e=>`<label class="pick"><input type="checkbox" class="pp" value="${e.id}"><span><b>${esc(e.name)}</b><br><span class="muted">${esc(e.muscle)}</span></span></label>`).join('')}</div></div><button class="btn primary" id="saveplan">Plan speichern</button></div></section><section class="card s6"><h2>Meine Pläne</h2>${db.plans.length?`<div class="list">${db.plans.map(p=>`<div class="row"><div><b>${esc(p.name)}</b><div class="row-sub">${p.exerciseIds.length} Übungen · ${db.workouts.filter(w=>w.planId===p.id).length} Trainings</div></div><div><button class="icon" onclick="startPlan('${p.id}')">▶</button><button class="icon" onclick="delPlan('${p.id}')">×</button></div></div>`).join('')}</div>`:'<div class="muted">Noch keine Pläne.</div>'}</section></div>`}
+function startPlan(id){go('workout');setTimeout(()=>{document.getElementById('plan').value=id;loadPlan()},20)}function delPlan(id){db.plans=db.plans.filter(p=>p.id!==id);save();render()}
+function exercises(){return `<div class="grid"><section class="card s4"><h2>Übung hinzufügen</h2><div class="form"><div class="field"><label>Name</label><input id="ename"></div><div class="field"><label>Muskelgruppe</label><input id="muscle"></div><button class="btn primary" id="saveex">Übung speichern</button></div></section><section class="card s8"><h2>Meine Übungen</h2><div class="list">${db.exercises.map(e=>`<div class="row"><div><b>${esc(e.name)}</b><div class="row-sub">${esc(e.muscle)}</div></div></div>`).join('')}</div></section></div>`}
+function history(){let id=document.getElementById('hex')?.value||db.exercises[0]?.id,pts=[];db.workouts.slice().sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(w=>w.exercises.filter(e=>e.exerciseId===id).forEach(e=>{let s=e.sets.filter(x=>+x.weight&&+x.reps);if(s.length)pts.push({date:w.date,max:Math.max(...s.map(x=>+x.weight)),volume:s.reduce((a,x)=>a+(+x.weight)*(+x.reps),0)})}));return `<div class="grid"><section class="card s12"><h2>Historie & Fortschritt</h2><div class="field"><label>Übung</label><select id="hex">${db.exercises.map(e=>`<option value="${e.id}" ${e.id===id?'selected':''}>${esc(e.name)}</option>`).join('')}</select></div></section><section class="card s6"><h3>Maximalgewicht</h3><div class="canvas"><canvas id="c1"></canvas></div></section><section class="card s6"><h3>Volumen</h3><div class="canvas"><canvas id="c2"></canvas></div></section><section class="card s12"><h3>Einträge</h3>${pts.length?`<div class="list">${pts.slice().reverse().map(p=>`<div class="row"><b>${fmt(p.date)}</b><span>${p.max} kg · ${Math.round(p.volume)} kg Volumen</span></div>`).join('')}</div>`:'<div class="muted">Noch keine Daten.</div>'}</section></div>`}
+function chart(id,pts,key){let c=document.getElementById(id);if(!c||!pts.length)return;let r=c.getBoundingClientRect(),d=devicePixelRatio||1,w=r.width,h=r.height;c.width=w*d;c.height=h*d;let x=c.getContext('2d');x.scale(d,d);let p=28,v=pts.map(a=>a[key]),mn=Math.min(...v),mx=Math.max(...v),ra=mx-mn||1;x.strokeStyle='#e5e7eb';for(let i=0;i<4;i++){let y=p+(h-2*p)*i/3;x.beginPath();x.moveTo(p,y);x.lineTo(w-p,y);x.stroke()}x.strokeStyle='#2563eb';x.lineWidth=3;x.beginPath();pts.forEach((a,i)=>{let xx=p+(w-2*p)*i/Math.max(1,pts.length-1),yy=h-p-(h-2*p)*(a[key]-mn)/ra;i?x.lineTo(xx,yy):x.moveTo(xx,yy)});x.stroke();x.fillStyle='#111827';x.fillText(mx+' kg',p,15)}
+function timerStart(){clearInterval(timer);let n=+document.getElementById('pause').value,t=document.getElementById('timer');t.innerHTML='<div class="timer">'+n+' s</div>';timer=setInterval(()=>{n--;t.innerHTML='<div class="timer">'+n+' s</div>';if(n<=0){clearInterval(timer);toast('Pause beendet!')}},1000)}
+function bind(){document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>go(b.dataset.p));let p=document.getElementById('plan');if(p){p.onchange=loadPlan;if(!document.getElementById('editor').innerHTML)loadPlan()}let f=document.getElementById('finish');if(f)f.onclick=finish;let sp=document.getElementById('saveplan');if(sp)sp.onclick=()=>{let n=document.getElementById('pname').value.trim(),ids=[...document.querySelectorAll('.pp:checked')].map(x=>x.value);if(!n||!ids.length)return toast('Name und Übungen auswählen');db.plans.push({id:uid(),name:n,exerciseIds:ids});save();render();toast('Plan gespeichert ✓')};let se=document.getElementById('saveex');if(se)se.onclick=()=>{let n=document.getElementById('ename').value.trim();if(!n)return toast('Name fehlt');db.exercises.push({id:uid(),name:n,muscle:document.getElementById('muscle').value||'Sonstige',type:'Kraft'});save();render()};let h=document.getElementById('hex');if(h)h.onchange=render;if(page==='history')setTimeout(()=>{let id=h?.value,pts=[];db.workouts.slice().sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(w=>w.exercises.filter(e=>e.exerciseId===id).forEach(e=>{let s=e.sets.filter(x=>+x.weight&&+x.reps);if(s.length)pts.push({date:w.date,max:Math.max(...s.map(x=>+x.weight)),volume:s.reduce((a,x)=>a+(+x.weight)*(+x.reps),0)})}));chart('c1',pts,'max');chart('c2',pts,'volume')},30)}
+function render(){document.getElementById('content').innerHTML=page==='home'?home():page==='workout'?workout():page==='plans'?plans():page==='exercises'?exercises():history();bind()}
+document.getElementById('exp').onclick=()=>{let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));a.download='ironminds-backup.json';a.click()};document.getElementById('imp').onclick=()=>document.getElementById('file').click();document.getElementById('file').onchange=e=>{let r=new FileReader();r.onload=()=>{try{db=JSON.parse(r.result);save();render();toast('Backup importiert ✓')}catch{toast('Ungültiges Backup')}};r.readAsText(e.target.files[0])};window.startTimer=timerStart;render();
+</script></body></html>
