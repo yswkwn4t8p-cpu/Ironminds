@@ -64,3 +64,12 @@ Fortschrittsfotos werden komprimiert und innerhalb des synchronisierten Ironmind
 - Profilübersicht nach Premium-App-Vorbild
 - neue mobile Navigation mit direktem Profilzugriff
 - Freunde weiterhin über die Startseite erreichbar
+
+## Neu in v3.5
+
+- Startseite exakt am letzten Entwurf ausgerichtet
+- großer Fitness-Hero mit Begrüßung
+- 8 Schnellzugriff-Kacheln
+- letztes Training mit Kennzahlen
+- Wochenübersicht mit Mini-Visualisierungen
+- stärkerer transparenter Glassmorphism-Look

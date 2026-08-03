@@ -47,3 +47,24 @@ html,body{background-position:center top;background-size:cover}
   .metric-row b,.weekly-stat b{font-size:17px}.profile-top{gap:14px}.avatar-wrap{width:104px;height:104px}.profile-top h2{font-size:24px}.profile-metrics b{font-size:17px}.profile-stats-grid{grid-template-columns:1fr}
   .bottom{min-height:84px}.bottom button{font-size:11px;min-width:51px;padding:5px 3px}.bottom b{font-size:22px}
 }
+
+/* v3.5 exact home */
+.home-screen{display:grid;gap:12px;max-width:760px;margin:auto}
+.home-hero-exact{position:relative;min-height:430px;border-radius:26px;overflow:hidden;background-image:url("../assets/fitness-background.jpg");background-size:cover;background-position:center 20%;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.hero-overlay-exact{position:absolute;inset:0;background:linear-gradient(90deg,rgba(3,5,8,.88) 0%,rgba(3,5,8,.58) 42%,rgba(3,5,8,.12) 72%,rgba(3,5,8,.35) 100%),linear-gradient(0deg,rgba(3,5,8,.72) 0%,transparent 45%)}
+.hero-copy-exact{position:absolute;left:28px;bottom:36px;max-width:420px;text-shadow:0 3px 18px rgba(0,0,0,.8)}
+.hero-kicker{color:#ff3437;font-weight:800;font-size:23px}.hero-copy-exact h2{font-size:48px;line-height:1;margin:6px 0 18px}.hero-copy-exact p{font-size:20px;line-height:1.55;margin:0}
+.exact-glass{background:linear-gradient(135deg,rgba(8,10,13,.48),rgba(16,19,24,.38));border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(16px) saturate(120%);box-shadow:0 14px 38px rgba(0,0,0,.28)}
+.quick-access-card h3{font-size:19px}.quick-access-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:15px}
+.quick-access-item{min-height:108px;border:1px solid rgba(255,255,255,.2);border-radius:17px;background:rgba(8,10,13,.42);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:.18s transform,.18s background}
+.quick-access-item:hover{transform:translateY(-2px);background:rgba(239,43,45,.12)}.quick-access-item span{font-size:30px;color:#ff3437}.quick-access-item b{font-size:14px}
+.exact-section-title{display:flex;justify-content:space-between;align-items:center}.exact-section-title>div{display:flex;align-items:center;gap:8px}.exact-section-title h3{margin:0}.section-icon{color:#ff3437}.exact-section-title>span{font-size:12px;color:var(--muted)}
+.last-workout-main{display:grid;grid-template-columns:1fr 110px;gap:16px;align-items:center;margin-top:16px}.last-workout-main h4{font-size:25px;margin:0 0 16px}.last-workout-metrics{display:grid;grid-template-columns:repeat(3,1fr)}.last-workout-metrics>div{padding:4px 12px;border-right:1px solid rgba(255,255,255,.12)}.last-workout-metrics>div:first-child{padding-left:0}.last-workout-metrics>div:last-child{border-right:0}.last-workout-metrics span,.last-workout-metrics b{display:block}.last-workout-metrics span{font-size:11px;color:var(--muted)}.last-workout-metrics b{margin-top:6px;font-size:18px}.muscle-silhouette{font-size:70px;color:rgba(239,43,45,.45);text-align:center}.empty-workout{padding:18px 0}
+.weekly-overview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:15px}.weekly-overview-item{position:relative;min-height:145px;border:1px solid rgba(255,255,255,.16);border-radius:16px;padding:14px;background:rgba(8,10,13,.38);overflow:hidden}.weekly-overview-item span,.weekly-overview-item small{display:block}.weekly-overview-item span{font-size:12px}.weekly-overview-item small{font-size:11px;color:var(--muted);margin-top:4px}.weekly-overview-item b{display:block;font-size:22px;margin-top:8px}.mini-bars{position:absolute;right:14px;bottom:14px;height:42px;display:flex;align-items:end;gap:4px}.mini-bars i{width:6px;background:linear-gradient(#ff3437,#7f1d1d);border-radius:3px 3px 0 0}.mini-line{position:absolute;right:13px;bottom:17px;color:#ff3437;font-size:24px;letter-spacing:-4px}.mini-clock{position:absolute;right:14px;bottom:12px;color:#ff3437;font-size:34px}
+@media(max-width:700px){
+  .home-screen{gap:10px}.home-hero-exact{min-height:440px;border-radius:0;margin:0 -4px;background-position:62% center}
+  .hero-copy-exact{left:22px;right:20px;bottom:34px;max-width:330px}.hero-kicker{font-size:21px}.hero-copy-exact h2{font-size:42px}.hero-copy-exact p{font-size:17px}
+  .quick-access-grid{grid-template-columns:repeat(4,1fr);gap:8px}.quick-access-item{min-height:94px;padding:6px}.quick-access-item span{font-size:25px}.quick-access-item b{font-size:11px}
+  .last-workout-main{grid-template-columns:1fr 72px}.muscle-silhouette{font-size:52px}.last-workout-metrics b{font-size:15px}.last-workout-metrics>div{padding:3px 8px}
+  .weekly-overview-grid{gap:7px}.weekly-overview-item{min-height:135px;padding:11px}.weekly-overview-item b{font-size:17px}.weekly-overview-item span{font-size:11px}.mini-bars{right:8px}.mini-line{right:8px}.mini-clock{right:8px}
+}

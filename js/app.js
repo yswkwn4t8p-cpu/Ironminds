@@ -41,49 +41,90 @@ function shell(body){
 function home(){
   const name=profile?.display_name||user?.email?.split("@")[0]||"Athlet";
   const latest=db.workouts[0];
-  const weekStart=new Date();weekStart.setDate(weekStart.getDate()-6);weekStart.setHours(0,0,0,0);
+  const now=new Date();
+  const weekStart=new Date(now);
+  weekStart.setDate(now.getDate()-6);
+  weekStart.setHours(0,0,0,0);
   const week=db.workouts.filter(w=>new Date(w.date+"T12:00:00")>=weekStart);
   const weekLoad=week.reduce((a,w)=>a+workoutLoad(w),0);
   const weekSets=week.reduce((a,w)=>a+w.exercises.reduce((b,e)=>b+e.sets.length,0),0);
-  return `<div class="home-dashboard">
-    <section class="welcome-panel">
-      <div class="welcome-copy">
-        <span class="eyebrow">Guten Tag,</span>
+
+  const quickItems=[
+    ["workout","🏋","Training"],
+    ["plans","▣","Pläne"],
+    ["exercises","⚒","Übungen"],
+    ["history","▥","Historie"],
+    ["history","↗","Fortschritt"],
+    ["profile","♙","Profil"],
+    ["friends","♧","Freunde"],
+    ["profile","◔","Statistiken"]
+  ];
+
+  return `<div class="home-screen">
+    <section class="home-hero-exact">
+      <div class="hero-overlay-exact"></div>
+      <div class="hero-copy-exact">
+        <span class="hero-kicker">Guten Morgen,</span>
         <h2>${esc(name)}!</h2>
         <p>„Das, was dich heute herausfordert, macht dich morgen stärker.“</p>
       </div>
     </section>
 
-    <section class="card glass-card quick-section">
+    <section class="card exact-glass quick-access-card">
       <h3>Schnellzugriff</h3>
-      <div class="quick-grid">
-        <button class="quick-tile" data-go="workout"><span>🏋</span><b>Training</b></button>
-        <button class="quick-tile" data-go="plans"><span>▣</span><b>Pläne</b></button>
-        <button class="quick-tile" data-go="exercises"><span>⚒</span><b>Übungen</b></button>
-        <button class="quick-tile" data-go="history"><span>▥</span><b>Historie</b></button>
-        <button class="quick-tile" data-go="history"><span>↗</span><b>Fortschritt</b></button>
-        <button class="quick-tile" data-go="profile"><span>♙</span><b>Profil</b></button>
-        <button class="quick-tile" data-go="friends"><span>♧</span><b>Freunde</b></button>
-        <button class="quick-tile" data-go="profile"><span>◔</span><b>Statistiken</b></button>
+      <div class="quick-access-grid">
+        ${quickItems.map(([go,icon,label])=>`
+          <button class="quick-access-item" data-go="${go}">
+            <span>${icon}</span>
+            <b>${label}</b>
+          </button>`).join("")}
       </div>
     </section>
 
-    <section class="card glass-card latest-card">
-      <div class="section-title"><h3>Letztes Training</h3><span>${latest?fmt(latest.date):"–"}</span></div>
-      ${latest?`<div class="latest-name">${esc(latest.name)}</div>
-      <div class="metric-row">
-        <div><span>Übungen</span><b>${latest.exercises.length}</b></div>
-        <div><span>Sätze</span><b>${latest.exercises.reduce((a,e)=>a+e.sets.length,0)}</b></div>
-        <div><span>Workload</span><b>${workoutLoad(latest).toLocaleString("de-DE")} kg</b></div>
-      </div>`:`<div class="muted">Noch kein Training gespeichert.</div>`}
+    <section class="card exact-glass last-workout-card">
+      <div class="exact-section-title">
+        <div><span class="section-icon">▣</span><h3>Letztes Training</h3></div>
+        <span>${latest?fmt(latest.date):"–"}</span>
+      </div>
+      ${latest?`
+        <div class="last-workout-main">
+          <div>
+            <h4>${esc(latest.name)}</h4>
+            <div class="last-workout-metrics">
+              <div><span>Dauer</span><b>${latest.duration||"–"}</b></div>
+              <div><span>Volumen</span><b>${workoutLoad(latest).toLocaleString("de-DE")} kg</b></div>
+              <div><span>Workload</span><b>${workoutLoad(latest).toLocaleString("de-DE")} kg</b></div>
+            </div>
+          </div>
+          <div class="muscle-silhouette">◒</div>
+        </div>`:
+        `<div class="empty-workout"><p>Noch kein Training gespeichert.</p><button class="btn primary" data-go="workout">Training starten</button></div>`}
     </section>
 
-    <section class="card glass-card weekly-card">
-      <div class="section-title"><h3>Übersicht diese Woche</h3><button class="text-link" data-go="history">Mehr anzeigen</button></div>
-      <div class="weekly-grid">
-        <div class="weekly-stat"><span>Trainings</span><b>${week.length}</b><small>Workouts</small></div>
-        <div class="weekly-stat"><span>Workload</span><b>${Math.round(weekLoad).toLocaleString("de-DE")} kg</b><small>${weekSets} Sätze</small></div>
-        <div class="weekly-stat"><span>Gesamt</span><b>${volume().toLocaleString("de-DE")} kg</b><small>seit Beginn</small></div>
+    <section class="card exact-glass weekly-overview-card">
+      <div class="exact-section-title">
+        <h3>Übersicht diese Woche</h3>
+        <button class="text-link" data-go="history">Mehr anzeigen</button>
+      </div>
+      <div class="weekly-overview-grid">
+        <div class="weekly-overview-item">
+          <span>Trainings</span>
+          <b>${week.length}</b>
+          <small>Workouts</small>
+          <div class="mini-bars">${[2,4,3,5,7,4,6].map(v=>`<i style="height:${v*5}px"></i>`).join("")}</div>
+        </div>
+        <div class="weekly-overview-item">
+          <span>Workload</span>
+          <b>${Math.round(weekLoad).toLocaleString("de-DE")} kg</b>
+          <small>${weekSets} Sätze</small>
+          <div class="mini-line">⌁⌁⌁</div>
+        </div>
+        <div class="weekly-overview-item">
+          <span>Gesamt</span>
+          <b>${volume().toLocaleString("de-DE")} kg</b>
+          <small>seit Beginn</small>
+          <div class="mini-clock">◷</div>
+        </div>
       </div>
     </section>
   </div>`
