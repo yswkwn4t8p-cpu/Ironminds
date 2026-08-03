@@ -1,1 +1,46 @@
-const C="ironminds-v4.1";const A=["./","./index.html","./css/styles.css","./js/app.js","./js/config.js","./js/db.js","./manifest.webmanifest","./assets/fitness-background.jpg"];self.addEventListener("install",e=>e.waitUntil(caches.open(C).then(c=>c.addAll(A))));self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x))))));self.addEventListener("fetch",e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(x=>{let y=x.clone();caches.open(C).then(c=>c.put(e.request,y));return x}).catch(()=>caches.match("./index.html")))));
+const CACHE="ironminds-v4.1.1";
+const STATIC=[
+  "./manifest.webmanifest",
+  "./assets/fitness-background.jpg"
+];
+
+self.addEventListener("install",event=>{
+  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(STATIC)));
+  self.skipWaiting();
+});
+
+self.addEventListener("activate",event=>{
+  event.waitUntil(
+    caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))
+  );
+  self.clients.claim();
+});
+
+self.addEventListener("fetch",event=>{
+  const request=event.request;
+  const url=new URL(request.url);
+
+  if(url.origin!==self.location.origin){
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  if(request.mode==="navigate" || ["script","style"].includes(request.destination)){
+    event.respondWith(
+      fetch(request,{cache:"no-store"}).then(response=>{
+        const copy=response.clone();
+        caches.open(CACHE).then(cache=>cache.put(request,copy));
+        return response;
+      }).catch(()=>caches.match(request).then(cached=>cached||caches.match("./index.html")))
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(request).then(cached=>cached||fetch(request).then(response=>{
+      const copy=response.clone();
+      caches.open(CACHE).then(cache=>cache.put(request,copy));
+      return response;
+    }))
+  );
+});

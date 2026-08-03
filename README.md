@@ -106,3 +106,11 @@ Fortschrittsfotos werden komprimiert und innerhalb des synchronisierten Ironmind
 - bei der Planerstellung können Sätze und Wiederholungen pro Übung vorgegeben werden
 - Planvorgaben werden beim Start automatisch als Satzanzahl und Wiederholungsziel übernommen
 - letzte Trainingswerte haben weiterhin Vorrang und werden vorausgefüllt
+
+## Fehlerbehebung v4.1.1
+
+- leere Anmeldeseite durch sichtbaren Lade- und Fehlerzustand ersetzt
+- Fehler beim Laden der Supabase-Bibliothek werden angezeigt
+- Startablauf mit Fehlerbehandlung abgesichert
+- Service Worker lädt HTML, CSS und JavaScript bevorzugt aus dem Netzwerk
+- alte, nicht zusammenpassende Cache-Dateien werden automatisch gelöscht

@@ -2,6 +2,10 @@
 import {SUPABASE_URL,SUPABASE_KEY} from "./config.js";
 import {loadLocal,saveLocal,uid} from "./db.js";
 
+if(!window.supabase?.createClient){
+  document.getElementById("app").innerHTML=`<div class="app"><div class="card auth"><div class="logo pro-logo"><span>PA</span><i></i></div><h2 style="text-align:center;margin-top:14px">Ironminds</h2><div class="notice warn">Die Anmeldebibliothek konnte nicht geladen werden. Prüfe deine Internetverbindung und lade die Seite vollständig neu.</div><button class="btn primary" style="width:100%;margin-top:12px" onclick="location.reload()">Neu laden</button></div></div>`;
+  throw new Error("Supabase SDK nicht geladen");
+}
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let db=loadLocal(),user=null,page="home",timer=null,dirty=false;
 db.bodyMetrics=db.bodyMetrics||[];
@@ -540,5 +544,19 @@ document.getElementById("addProgressPhoto")?.addEventListener("click",async()=>{
 if(page==="profile")setTimeout(()=>{const pts=bodyChartPoints();const c=document.getElementById("bodyChart");if(c&&pts.length){const mapped=pts.map(x=>({date:x.date,value:x.value}));chart("bodyChart",mapped,"value")}},25);
 const h=document.getElementById("hex");if(h){h.onchange=render;setTimeout(()=>{const pts=pointsFor(h.value);chart("c1",pts,"max");chart("c2",pts,"volume")},25)}}
 function render(){app.innerHTML=user?shell(page==="home"?home():page==="workout"?workout():page==="plans"?plans():page==="friends"?friendsPage():page==="profile"?profilePage():page==="exercises"?exercises():history()):authPage();bind()}
-const {data:{session}}=await sb.auth.getSession();user=session?.user||null;if(user){await pull();await loadSocial();}render();
-window.addEventListener("online",()=>push());if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js");
+try{
+  const {data:{session},error:sessionError}=await sb.auth.getSession();
+  if(sessionError)console.error(sessionError);
+  user=session?.user||null;
+  if(user){await pull();await loadSocial()}
+  render();
+}catch(error){
+  console.error("Ironminds Startfehler:",error);
+  user=null;
+  try{render()}catch(renderError){
+    console.error(renderError);
+    document.getElementById("app").innerHTML=`<div class="app"><div class="card auth"><div class="logo pro-logo"><span>PA</span><i></i></div><h2 style="text-align:center;margin-top:14px">Ironminds</h2><div class="notice warn">Die Anmeldung konnte nicht dargestellt werden.</div><button class="btn primary" style="width:100%;margin-top:12px" onclick="location.reload()">Seite neu laden</button></div></div>`;
+  }
+}
+window.addEventListener("online",()=>push());
+if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js?v=4.1.1");
