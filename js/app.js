@@ -54,7 +54,7 @@ function shell(body){
     <main>${body}</main>
   </div>`
 }
-function home(){const latest=db.workouts[0],week=db.workouts.filter(w=>new Date(w.date)>new Date(Date.now()-7*86400000));const quick=[["workout","dumbbell","Training"],["plans","calendar","Pläne"],["exercises","exercise","Übungen"],["history","chart","Historie"],["history","chart","Fortschritt"],["profile","user","Profil"],["profile","chart","Statistiken"],["plans","plus","Neu"]];return `<div class="grid"><section class="hero s12"><div class="hero-copy"><span class="kicker">${greeting()}</span><h2>${esc(name())}!</h2><p>„${esc(dailyQuote())}“</p></div></section><section class="card s12"><h3>Schnellzugriff</h3><div class="quick-grid">${quick.map(([p,i,l])=>`<button class="quick" data-p="${p}">${icon(i,"quick-icon")}<b>${l}</b></button>`).join("")}</div></section><section class="card s6"><h3>Letztes Training</h3>${latest?`<div class="row"><div><b>${esc(latest.name)}</b><div class="row-sub">${fmt(latest.date)}</div></div><span class="pill">${workload(latest)} kg</span></div>`:`<div class="muted">Noch kein Training gespeichert.</div>`}</section><section class="card s6"><h3>Diese Woche</h3><div class="stats"><div class="stat"><b>${week.length}</b><span>Trainings</span></div><div class="stat"><b>${week.reduce((a,w)=>a+workload(w),0)}</b><span>Workload</span></div><div class="stat"><b>${db.plans.length}</b><span>Pläne</span></div></div></section></div>`}
+function home(){const latest=db.workouts[0],week=db.workouts.filter(w=>new Date(w.date)>new Date(Date.now()-7*86400000));const quick=[["workout","dumbbell","Training"],["plans","calendar","Pläne"],["exercises","exercise","Übungen"],["history","chart","Historie"],["history","chart","Fortschritt"],["profile","user","Profil"],["profile","chart","Statistiken"],["plans","plus","Neu"]];return `<div class="grid"><section class="hero s12"><div class="hero-copy"><span class="kicker">${greeting()}</span><h2>${esc(name())}!</h2><p>„${esc(dailyQuote())}“</p></div><div class="hero-bottom-brand">IRONMINDS</div></section><section class="card s12"><h3>Schnellzugriff</h3><div class="quick-grid">${quick.map(([p,i,l])=>`<button class="quick" data-p="${p}">${icon(i,"quick-icon")}<b>${l}</b></button>`).join("")}</div></section><section class="card s6"><h3>Letztes Training</h3>${latest?`<div class="row"><div><b>${esc(latest.name)}</b><div class="row-sub">${fmt(latest.date)}</div></div><span class="pill">${workload(latest)} kg</span></div>`:`<div class="muted">Noch kein Training gespeichert.</div>`}</section><section class="card s6"><h3>Diese Woche</h3><div class="stats"><div class="stat"><b>${week.length}</b><span>Trainings</span></div><div class="stat"><b>${week.reduce((a,w)=>a+workload(w),0)}</b><span>Workload</span></div><div class="stat"><b>${db.plans.length}</b><span>Pläne</span></div></div></section></div>`}
 function plans(){
   return `<div class="grid">
     <section class="card s6"><h2 id="planFormTitle">Plan erstellen</h2>
@@ -86,7 +86,51 @@ function lastSets(pid,eid){return db.workouts.filter(w=>w.planId===pid).sort((a,
 function setRow(n,s={}){return `<div class="setrow"><span>${n}</span><input type="number" step=".5" value="${s.weight||""}" placeholder="kg"><input type="number" value="${s.reps||""}" placeholder="Wdh."><input type="number" min="0" max="10" value="${s.rir||""}" placeholder="RIR"><input type="checkbox"></div>`}
 function loadPlan(){const id=document.getElementById("plan").value,p=db.plans.find(x=>x.id===id),ids=p?p.exerciseIds:db.exercises.map(e=>e.id);document.getElementById("wname").value=p?.name||"";document.getElementById("editor").innerHTML=`<div class="card" style="margin-top:10px">${ids.map(id=>{const e=db.exercises.find(x=>x.id===id),last=lastSets(id?document.getElementById("plan").value:"",id),pres=p?.prescriptions?.find(x=>x.exerciseId===id),sets=last.length?last:Array.from({length:pres?.sets||1},()=>({reps:pres?.reps||""}));return `<div class="workout-ex" data-e="${id}"><b>${esc(e.name)}</b>${pres?`<div class="notice">${pres.sets} Sätze × ${pres.reps} Wdh.</div>`:""}<div class="sethead"><span>#</span><span>Gewicht</span><span>Wdh.</span><span>RIR</span><span>✓</span></div>${sets.map((s,i)=>setRow(i+1,s)).join("")}</div>`}).join("")}<div class="field"><label>Notiz</label><textarea id="note"></textarea></div><button class="btn good" id="finish">Training abschließen</button></div>`;document.getElementById("finish").onclick=finish}
 function finish(){const ex=[...document.querySelectorAll(".workout-ex")].map(b=>({exerciseId:b.dataset.e,sets:[...b.querySelectorAll(".setrow")].map(r=>{const i=r.querySelectorAll("input");return{weight:i[0].value,reps:i[1].value,rir:i[2].value}}).filter(s=>s.weight||s.reps)})).filter(e=>e.sets.length);if(!ex.length)return toast("Bitte Sätze eintragen");const modal=document.createElement("div");modal.className="modal";modal.innerHTML=`<div class="card modal-card"><h2>Stresslevel zum Abschluss</h2><div class="list">${ex.map(e=>`<div class="stress-row" data-e="${e.exerciseId}"><b>${esc(db.exercises.find(x=>x.id===e.exerciseId)?.name)}</b><div class="stress-control"><input type="range" min="1" max="10" value="5"><span>5</span></div></div>`).join("")}</div><div style="margin-top:12px"><button class="btn" id="cancel">Abbrechen</button> <button class="btn good" id="saveWorkout">Speichern</button></div></div>`;document.body.appendChild(modal);modal.querySelectorAll("input").forEach(i=>i.oninput=()=>i.nextElementSibling.textContent=i.value);modal.querySelector("#cancel").onclick=()=>modal.remove();modal.querySelector("#saveWorkout").onclick=async()=>{modal.querySelectorAll(".stress-row").forEach(r=>{ex.find(e=>e.exerciseId===r.dataset.e).stress=+r.querySelector("input").value});db.workouts.unshift({id:uid(),planId:document.getElementById("plan").value,name:document.getElementById("wname").value||"Training",date:document.getElementById("wdate").value,notes:document.getElementById("note").value,exercises:ex});save();await sync();modal.remove();page="home";render();toast("Training gespeichert")}}
-function history(){return `<div class="card"><h2>Historie</h2><div class="list">${db.workouts.map(w=>`<div class="row"><div><b>${esc(w.name)}</b><div class="row-sub">${fmt(w.date)}</div></div><span class="pill">${workload(w)} kg Workload</span></div>`).join("")||'<div class="muted">Noch keine Trainings.</div>'}</div></div>`}
+function history(){
+  const records=strengthRecords();
+  const muscles=muscleStats();
+  const months=periodStats("month");
+  const years=periodStats("year");
+  return `<div class="grid">
+    <section class="card s12">
+      <h2>Historie & Fortschritt</h2>
+      <div class="list">
+        ${db.workouts.map(w=>`<div class="row">
+          <div><b>${esc(w.name)}</b><div class="row-sub">${fmt(w.date)} · ${w.exercises.length} Übungen</div></div>
+          <span class="pill">${workload(w)} kg Workload</span>
+        </div>`).join("")||'<div class="muted">Noch keine Trainings.</div>'}
+      </div>
+    </section>
+
+    <section class="card s6">
+      <h2>Kraftrekorde</h2>
+      <div class="list">
+        ${records.map(r=>`<div class="row"><div><b>${esc(r.name)}</b><div class="row-sub">${fmt(r.date)}</div></div><span class="pill">${r.best} kg × ${r.reps}</span></div>`).join("")||'<div class="muted">Noch keine Rekorde.</div>'}
+      </div>
+    </section>
+
+    <section class="card s6">
+      <h2>Muskelgruppen-Auswertung</h2>
+      <div class="list">
+        ${muscles.map(([m,v])=>`<div class="row"><b>${esc(m)}</b><span class="pill">${Math.round(v)} kg</span></div>`).join("")||'<div class="muted">Noch keine Daten.</div>'}
+      </div>
+    </section>
+
+    <section class="card s6">
+      <h2>Monatsstatistik</h2>
+      <div class="list">
+        ${months.map(([k,v])=>`<div class="row"><div><b>${k}</b><div class="row-sub">${v.count} Trainings · ${v.sets} Sätze</div></div><span class="pill">${Math.round(v.load)} kg</span></div>`).join("")||'<div class="muted">Noch keine Daten.</div>'}
+      </div>
+    </section>
+
+    <section class="card s6">
+      <h2>Jahresstatistik</h2>
+      <div class="list">
+        ${years.map(([k,v])=>`<div class="row"><div><b>${k}</b><div class="row-sub">${v.count} Trainings · ${v.sets} Sätze</div></div><span class="pill">${Math.round(v.load)} kg</span></div>`).join("")||'<div class="muted">Noch keine Daten.</div>'}
+      </div>
+    </section>
+  </div>`
+}
 function exercises(){return `<div class="grid"><section class="card s4"><h2>Übung hinzufügen</h2><div class="form"><div class="field"><label>Name</label><input id="ename"></div><div class="field"><label>Muskelgruppe</label><input id="muscle"></div><button class="btn primary" id="saveExercise">Speichern</button></div></section><section class="card s8"><h2>Übungen</h2><div class="list">${db.exercises.map(e=>`<div class="row"><b>${esc(e.name)}</b><span>${esc(e.muscle)}</span></div>`).join("")}</div></section></div>`}
 
 function bodyPoints(){return (db.bodyMetrics||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date))}

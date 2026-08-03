@@ -19,3 +19,11 @@ Sauber neu aufgebaute Version mit stabilem Login, Supabase-Sync, täglichem Spru
 - Kraftrekorde wiederhergestellt
 - Muskelgruppen-Auswertung wiederhergestellt
 - Monats- und Jahresstatistiken wiederhergestellt
+
+## Neu in v4.3 Clean
+
+- zusätzliche Sätze können während des Trainings eingefügt werden
+- Historie und Fortschritt befinden sich auf einer gemeinsamen Seite
+- Kraftrekorde, Muskelgruppen sowie Monats- und Jahresstatistiken sind dort gebündelt
+- oberer Schriftzug im Hintergrundbereich wird überblendet
+- unterer Schriftzug lautet Ironminds und ist vollständig sichtbar

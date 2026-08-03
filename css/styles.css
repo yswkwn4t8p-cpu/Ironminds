@@ -32,3 +32,16 @@ h2,h3{margin:0 0 10px}.muted{color:var(--muted);font-size:12px}.row{display:flex
 .chart-wrap{height:230px;margin:12px 0}.chart-wrap canvas{width:100%;height:100%}
 .photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:12px}
 .photo-grid figure{margin:0}.photo-grid img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;border:1px solid var(--line)}.photo-grid figcaption{text-align:center;font-size:11px;color:var(--muted);margin-top:4px}
+
+/* v4.3 sets history background */
+.add-set{margin-top:10px;display:inline-flex;align-items:center;gap:7px}
+.hero{background-position:center 30%;position:relative}
+.hero::before{content:"";position:absolute;left:0;right:0;top:0;height:88px;background:linear-gradient(rgba(4,6,9,.96),rgba(4,6,9,.68),transparent);z-index:1}
+.hero-bottom-brand{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:2;font-weight:900;font-size:clamp(28px,7vw,68px);letter-spacing:.12em;color:rgba(255,255,255,.96);text-shadow:0 4px 22px rgba(0,0,0,.95),0 0 18px rgba(239,52,55,.35);white-space:nowrap}
+.hero-copy{bottom:92px}
+@media(max-width:700px){
+  .hero{background-position:62% 34%}
+  .hero::before{height:76px}
+  .hero-bottom-brand{bottom:12px;font-size:34px;letter-spacing:.08em}
+  .hero-copy{bottom:82px}
+}
