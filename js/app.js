@@ -202,8 +202,51 @@ function home(){
 function workout(){return `<div class="grid"><section class="card s12"><h2>Training</h2><div class="two"><div class="field"><label>Trainingsplan</label><select id="plan"><option value="">Freies Training</option>${db.plans.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("")}</select></div><div class="field"><label>Titel</label><input id="wname" placeholder="z. B. Push A"></div></div><div class="two" style="margin-top:9px"><div class="field"><label>Datum</label><input id="wdate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Pause</label><select id="pause"><option value="60">60 Sek.</option><option value="90">90 Sek.</option><option value="120">120 Sek.</option><option value="180">180 Sek.</option></select></div></div><div id="editor"></div></section></div>`}
 function lastSets(pid,eid){return db.workouts.filter(w=>(pid?w.planId===pid:true)&&w.exercises.some(e=>e.exerciseId===eid)).sort((a,b)=>new Date(b.date)-new Date(a.date))[0]?.exercises.find(e=>e.exerciseId===eid)?.sets||[]}
 function setRow(n,s={}){return `<div class="setrow"><span>${n}</span><input type="number" step=".5" value="${s.weight||""}" placeholder="kg"><input type="number" value="${s.reps||""}" placeholder="Wdh."><input type="number" min="0" max="10" step="1" value="${s.rir??""}" placeholder="RIR"><input type="checkbox" ${s.done?"checked":""}></div>`}
-function editor(ids,pid){return `<div class="card" style="margin-top:12px"><h3>Sätze</h3>${ids.map(id=>{const e=db.exercises.find(x=>x.id===id),last=lastSets(pid,id),sets=last.length?last:[{}];return `<div class="workout-ex" data-e="${id}"><b>${esc(e?.name||"Übung")}</b>${last.length?`<div class="notice">Letztes Training: ${last.map(s=>`${s.weight||"-"} kg × ${s.reps||"-"}`).join(" · ")} · vorausgefüllt</div>`:""}<div class="field stress-field"><label>Stresslevel der Übung (1–10)</label><input class="exercise-stress" type="range" min="1" max="10" value="${last.at(-1)?.stress||5}"><span class="stress-value">${last.at(-1)?.stress||5}</span></div><div class="sethead"><span>#</span><span>Gewicht</span><span>Wdh.</span><span>RIR</span><span>✓</span></div><div class="sets">${sets.map((s,i)=>setRow(i+1,s)).join("")}</div><button class="btn add-set">＋ Satz</button></div>`}).join("")}<div class="field" style="margin-top:10px"><label>Notiz</label><textarea id="note"></textarea></div><div class="row-actions"><button class="btn" id="timerStart">⏱ Pause starten</button><button class="btn good" id="finish">✓ Training abschließen</button></div><div id="timer"></div></div>`}
-function plans(){return `<div class="grid"><section class="card s6"><h2>Plan erstellen</h2><div class="form"><div class="field"><label>Planname</label><input id="pname" placeholder="z. B. Push A"></div><div class="field"><label>Übungen</label><div class="exercise-picker">${db.exercises.map(e=>`<label class="pick"><input type="checkbox" class="planpick" value="${e.id}"><span><b>${esc(e.name)}</b><br><span class="muted">${esc(e.muscle)}</span></span></label>`).join("")}</div></div><button class="btn primary" id="saveplan">Plan speichern</button></div></section><section class="card s6"><h2>Meine Pläne</h2>${db.plans.length?`<div class="list">${db.plans.map(p=>`<div class="row"><div><b>${esc(p.name)}</b><div class="row-sub">${p.exerciseIds.length} Übungen · ${db.workouts.filter(w=>w.planId===p.id).length} Trainings</div></div><div class="row-actions"><button class="icon start-plan" data-id="${p.id}">▶</button><button class="icon delete-plan" data-id="${p.id}">×</button></div></div>`).join("")}</div>`:`<div class="muted">Noch keine Pläne.</div>`}</section></div>`}
+function editor(ids,pid){
+  const plan=db.plans.find(p=>p.id===pid);
+  return `<div class="card" style="margin-top:12px"><h3>Sätze</h3>
+  ${ids.map(id=>{
+    const e=db.exercises.find(x=>x.id===id);
+    const last=lastSets(pid,id);
+    const prescription=plan?.prescriptions?.find(x=>x.exerciseId===id);
+    const defaultSets=prescription?.sets||1;
+    const defaultReps=prescription?.reps||"";
+    const sets=last.length?last:Array.from({length:defaultSets},()=>({reps:defaultReps}));
+    return `<div class="workout-ex" data-e="${id}"><b>${esc(e?.name||"Übung")}</b>
+      ${prescription?`<div class="notice">Planvorgabe: ${prescription.sets} Sätze × ${prescription.reps} Wiederholungen</div>`:""}
+      ${last.length?`<div class="notice">Letztes Training: ${last.map(s=>`${s.weight||"-"} kg × ${s.reps||"-"}`).join(" · ")} · vorausgefüllt</div>`:""}
+      <div class="sethead"><span>#</span><span>Gewicht</span><span>Wdh.</span><span>RIR</span><span>✓</span></div>
+      <div class="sets">${sets.map((set,i)=>setRow(i+1,set)).join("")}</div>
+      <button class="btn add-set">＋ Satz</button>
+    </div>`
+  }).join("")}
+  <div class="field" style="margin-top:10px"><label>Notiz</label><textarea id="note"></textarea></div>
+  <div class="row-actions"><button class="btn" id="timerStart">⏱ Pause starten</button><button class="btn good" id="finish">✓ Training abschließen</button></div>
+  <div id="timer"></div></div>`
+}).join("")}<div class="field" style="margin-top:10px"><label>Notiz</label><textarea id="note"></textarea></div><div class="row-actions"><button class="btn" id="timerStart">⏱ Pause starten</button><button class="btn good" id="finish">✓ Training abschließen</button></div><div id="timer"></div></div>`}
+function plans(){return `<div class="grid">
+<section class="card s6"><h2>Plan erstellen</h2>
+<div class="form">
+  <div class="field"><label>Planname</label><input id="pname" placeholder="z. B. Push A"></div>
+  <div class="field"><label>Übungen, Sätze und Wiederholungen</label>
+    <div class="exercise-picker plan-builder">
+      ${db.exercises.map(e=>`<div class="plan-exercise-row">
+        <label class="pick">
+          <input type="checkbox" class="planpick" value="${e.id}">
+          <span><b>${esc(e.name)}</b><br><span class="muted">${esc(e.muscle)}</span></span>
+        </label>
+        <div class="plan-defaults">
+          <div class="field"><label>Sätze</label><input class="plan-sets" data-id="${e.id}" type="number" min="1" max="20" value="3"></div>
+          <div class="field"><label>Wdh.</label><input class="plan-reps" data-id="${e.id}" type="number" min="1" max="100" value="10"></div>
+        </div>
+      </div>`).join("")}
+    </div>
+  </div>
+  <button class="btn primary" id="saveplan">Plan speichern</button>
+</div></section>
+<section class="card s6"><h2>Meine Pläne</h2>
+${db.plans.length?`<div class="list">${db.plans.map(p=>`<div class="row"><div><b>${esc(p.name)}</b><div class="row-sub">${p.exerciseIds.length} Übungen · ${db.workouts.filter(w=>w.planId===p.id).length} Trainings</div></div><div class="row-actions"><button class="icon start-plan" data-id="${p.id}">▶</button><button class="icon delete-plan" data-id="${p.id}">×</button></div></div>`).join("")}</div>`:`<div class="muted">Noch keine Pläne.</div>`}
+</section></div>`}</section></div>`}
 function exercises(){return `<div class="grid"><section class="card s4"><h2>Übung hinzufügen</h2><div class="form"><div class="field"><label>Name</label><input id="ename"></div><div class="field"><label>Muskelgruppe</label><input id="muscle"></div><div class="field"><label>Typ</label><select id="etype"><option>Kraft</option><option>Körpergewicht</option><option>Cardio</option><option>Mobilität</option></select></div><button class="btn primary" id="saveex">Übung speichern</button></div></section><section class="card s8"><h2>Meine Übungen</h2><div class="list">${db.exercises.map(e=>`<div class="row"><div><b>${esc(e.name)}</b><div class="row-sub">${esc(e.muscle)} · ${esc(e.type)}</div></div><button class="icon delete-ex" data-id="${e.id}">×</button></div>`).join("")}</div></section></div>`}
 function workoutLoad(w){return Math.round(w.exercises.reduce((a,e)=>a+e.sets.reduce((b,s)=>b+(+s.weight||0)*(+s.reps||0),0),0))}
 function history(){const id=document.getElementById("hex")?.value||db.exercises[0]?.id,pts=pointsFor(id);return `<div class="grid"><section class="card s12"><h2>Historie & Fortschritt</h2><div class="field"><label>Übung</label><select id="hex">${db.exercises.map(e=>`<option value="${e.id}" ${e.id===id?"selected":""}>${esc(e.name)}</option>`).join("")}</select></div></section><section class="card s4"><h3>Bestleistung</h3><div style="font-size:34px;font-weight:900">${pts.length?Math.max(...pts.map(p=>p.max)):0} kg</div></section><section class="card s4"><h3>Einheiten</h3><div style="font-size:34px;font-weight:900">${pts.length}</div></section><section class="card s4"><h3>Letztes Gewicht</h3><div style="font-size:34px;font-weight:900">${pts.at(-1)?.max||0} kg</div></section><section class="card s6"><h3>Maximalgewicht</h3><div class="canvas"><canvas id="c1"></canvas></div></section><section class="card s6"><h3>Volumen</h3><div class="canvas"><canvas id="c2"></canvas></div></section><section class="card s12"><h3>Workload pro Training</h3>${db.workouts.length?`<div class="list">${db.workouts.map(w=>`<div class="row"><div><b>${esc(w.name)}</b><div class="row-sub">${fmt(w.date)} · ${w.exercises.length} Übungen</div></div><div class="row-actions"><span class="pill">${workoutLoad(w)} kg Workload</span><button class="icon share-workout" data-id="${w.id}">${icon("share","share-svg")}<span>Teilen</span></button></div></div>`).join("")}</div>`:`<div class="muted">Noch keine Trainings.</div>`}</section><section class="card s12"><h3>Übungsfortschritt</h3>${pts.length?`<div class="list">${pts.slice().reverse().map(p=>`<div class="row"><b>${fmt(p.date)}</b><span>${p.max} kg · ${Math.round(p.volume)} kg Volumen</span></div>`).join("")}</div>`:`<div class="muted">Noch keine Daten.</div>`}</section></div>`}
@@ -396,11 +439,63 @@ async function login(mode){const email=document.getElementById("email").value.tr
 async function resetPassword(){const email=document.getElementById("email").value.trim();if(!email)return toast("Bitte zuerst E-Mail eingeben");const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});toast(error?error.message:"E-Mail wurde gesendet.")}
 function loadPlan(){const id=document.getElementById("plan").value,p=db.plans.find(x=>x.id===id);if(p){document.getElementById("wname").value=p.name;document.getElementById("editor").innerHTML=editor(p.exerciseIds,id)}else document.getElementById("editor").innerHTML=editor(db.exercises.map(e=>e.id),"");bindEditor()}
 function bindEditor(){document.querySelectorAll(".add-set").forEach(b=>b.onclick=()=>{const q=b.previousElementSibling;q.insertAdjacentHTML("beforeend",setRow(q.children.length+1))});document.getElementById("finish")?.addEventListener("click",finish);document.getElementById("timerStart")?.addEventListener("click",startTimer)}
-async function finish(){const pid=document.getElementById("plan").value,ex=[...document.querySelectorAll(".workout-ex")].map(b=>({exerciseId:b.dataset.e,stress:+b.querySelector(".exercise-stress")?.value||5,sets:[...b.querySelectorAll(".setrow")].map(r=>{const i=r.querySelectorAll("input");return{weight:i[0].value,reps:i[1].value,rir:i[2].value,done:i[3].checked}}).filter(s=>s.weight||s.reps)})).filter(x=>x.sets.length);if(!ex.length)return toast("Bitte mindestens einen Satz eintragen");db.workouts.unshift({id:uid(),planId:pid,name:document.getElementById("wname").value||"Training",date:document.getElementById("wdate").value,notes:document.getElementById("note").value,exercises:ex});persist();await push();page="home";render();toast("Training gespeichert ✓")}
+async function finish(){
+  const pid=document.getElementById("plan").value;
+  const exercises=[...document.querySelectorAll(".workout-ex")].map(b=>({
+    exerciseId:b.dataset.e,
+    sets:[...b.querySelectorAll(".setrow")].map(r=>{
+      const i=r.querySelectorAll("input");
+      return{weight:i[0].value,reps:i[1].value,rir:i[2].value,done:i[3].checked}
+    }).filter(set=>set.weight||set.reps)
+  })).filter(x=>x.sets.length);
+  if(!exercises.length)return toast("Bitte mindestens einen Satz eintragen");
+
+  const stressHtml=exercises.map(ex=>{
+    const exercise=db.exercises.find(x=>x.id===ex.exerciseId);
+    return `<div class="stress-summary-row" data-e="${ex.exerciseId}">
+      <div><b>${esc(exercise?.name||"Übung")}</b><div class="row-sub">Wie anstrengend war diese Übung?</div></div>
+      <div class="stress-control"><input type="range" min="1" max="10" value="5"><span>5</span></div>
+    </div>`
+  }).join("");
+
+  const modal=document.createElement("div");
+  modal.className="modal-backdrop";
+  modal.innerHTML=`<div class="modal-card"><h2>Stresslevel zum Abschluss</h2><p class="muted">Bewerte jede Übung erst jetzt von 1 bis 10.</p><div class="stress-summary-list">${stressHtml}</div><div class="row-actions"><button class="btn" id="cancelStress">Abbrechen</button><button class="btn good" id="saveStressWorkout">Training speichern</button></div></div>`;
+  document.body.appendChild(modal);
+
+  modal.querySelectorAll(".stress-control input").forEach(input=>input.oninput=()=>input.nextElementSibling.textContent=input.value);
+  modal.querySelector("#cancelStress").onclick=()=>modal.remove();
+  modal.querySelector("#saveStressWorkout").onclick=async()=>{
+    modal.querySelectorAll(".stress-summary-row").forEach(row=>{
+      const ex=exercises.find(x=>x.exerciseId===row.dataset.e);
+      if(ex)ex.stress=+row.querySelector("input").value;
+    });
+    db.workouts.unshift({
+      id:uid(),
+      planId:pid,
+      name:document.getElementById("wname").value||"Training",
+      date:document.getElementById("wdate").value,
+      notes:document.getElementById("note").value,
+      exercises
+    });
+    persist();await push();modal.remove();page="home";render();toast("Training gespeichert ✓")
+  };
+}
 function startTimer(){clearInterval(timer);let n=+document.getElementById("pause").value,t=document.getElementById("timer");t.innerHTML=`<div class="timer">${n} s</div>`;timer=setInterval(()=>{n--;t.innerHTML=`<div class="timer">${n} s</div>`;if(n<=0){clearInterval(timer);toast("Pause beendet!")}},1000)}
 function backup(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:"application/json"}));a.download="ironminds-backup.json";a.click()}
-function bind(){document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{page=b.dataset.p;render()});document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{page=b.dataset.go;render()});document.getElementById("logout")?.addEventListener("click",async()=>{await sb.auth.signOut();user=null;render()});document.getElementById("backup")?.addEventListener("click",backup);document.getElementById("login")?.addEventListener("click",()=>login("login"));document.getElementById("signup")?.addEventListener("click",()=>login("signup"));document.getElementById("reset")?.addEventListener("click",resetPassword);const p=document.getElementById("plan");if(p){p.onchange=loadPlan;loadPlan()}document.getElementById("saveplan")?.addEventListener("click",async()=>{const name=document.getElementById("pname").value.trim(),ids=[...document.querySelectorAll(".planpick:checked")].map(x=>x.value);if(!name||!ids.length)return toast("Name und Übungen auswählen");db.plans.push({id:uid(),name,exerciseIds:ids});persist();await push();render();toast("Plan gespeichert ✓")});document.querySelectorAll(".start-plan").forEach(b=>b.onclick=()=>{page="workout";render();setTimeout(()=>{document.getElementById("plan").value=b.dataset.id;loadPlan()},20)});document.querySelectorAll(".delete-plan").forEach(b=>b.onclick=async()=>{db.plans=db.plans.filter(p=>p.id!==b.dataset.id);persist();await push();render()});document.getElementById("saveex")?.addEventListener("click",async()=>{const name=document.getElementById("ename").value.trim();if(!name)return toast("Name fehlt");db.exercises.push({id:uid(),name,muscle:document.getElementById("muscle").value||"Sonstige",type:document.getElementById("etype").value});persist();await push();render();toast("Übung gespeichert ✓")});document.querySelectorAll(".delete-ex").forEach(b=>b.onclick=async()=>{db.exercises=db.exercises.filter(e=>e.id!==b.dataset.id);db.plans.forEach(p=>p.exerciseIds=p.exerciseIds.filter(id=>id!==b.dataset.id));persist();await push();render()});document.querySelectorAll(".exercise-stress").forEach(x=>x.oninput=()=>x.nextElementSibling.textContent=x.value);
-document.getElementById("saveProfile")?.addEventListener("click",async()=>{const display_name=document.getElementById("displayName").value.trim()||"Ironminds";const {error}=await sb.from("profiles").update({display_name}).eq("user_id",user.id);if(error)return toast(error.message);await loadSocial();render();toast("Profil gespeichert")});
+function bind(){document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{page=b.dataset.p;render()});document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{page=b.dataset.go;render()});document.getElementById("logout")?.addEventListener("click",async()=>{await sb.auth.signOut();user=null;render()});document.getElementById("backup")?.addEventListener("click",backup);document.getElementById("login")?.addEventListener("click",()=>login("login"));document.getElementById("signup")?.addEventListener("click",()=>login("signup"));document.getElementById("reset")?.addEventListener("click",resetPassword);const p=document.getElementById("plan");if(p){p.onchange=loadPlan;loadPlan()}document.getElementById("saveplan")?.addEventListener("click",async()=>{
+  const name=document.getElementById("pname").value.trim();
+  const selected=[...document.querySelectorAll(".planpick:checked")];
+  if(!name||!selected.length)return toast("Name und Übungen auswählen");
+  const exerciseIds=selected.map(x=>x.value);
+  const prescriptions=exerciseIds.map(id=>({
+    exerciseId:id,
+    sets:Math.max(1,+document.querySelector(`.plan-sets[data-id="${id}"]`)?.value||3),
+    reps:Math.max(1,+document.querySelector(`.plan-reps[data-id="${id}"]`)?.value||10)
+  }));
+  db.plans.push({id:uid(),name,exerciseIds,prescriptions});
+  persist();await push();render();toast("Plan gespeichert ✓")
+});document.querySelectorAll(".start-plan").forEach(b=>b.onclick=()=>{page="workout";render();setTimeout(()=>{document.getElementById("plan").value=b.dataset.id;loadPlan()},20)});document.querySelectorAll(".delete-plan").forEach(b=>b.onclick=async()=>{db.plans=db.plans.filter(p=>p.id!==b.dataset.id);persist();await push();render()});document.getElementById("saveex")?.addEventListener("click",async()=>{const name=document.getElementById("ename").value.trim();if(!name)return toast("Name fehlt");db.exercises.push({id:uid(),name,muscle:document.getElementById("muscle").value||"Sonstige",type:document.getElementById("etype").value});persist();await push();render();toast("Übung gespeichert ✓")});document.querySelectorAll(".delete-ex").forEach(b=>b.onclick=async()=>{db.exercises=db.exercises.filter(e=>e.id!==b.dataset.id);db.plans.forEach(p=>p.exerciseIds=p.exerciseIds.filter(id=>id!==b.dataset.id));persist();await push();render()});document.getElementById("saveProfile")?.addEventListener("click",async()=>{const display_name=document.getElementById("displayName").value.trim()||"Ironminds";const {error}=await sb.from("profiles").update({display_name}).eq("user_id",user.id);if(error)return toast(error.message);await loadSocial();render();toast("Profil gespeichert")});
 document.getElementById("addFriend")?.addEventListener("click",sendFriendRequest);
 document.querySelectorAll(".accept-request").forEach(b=>b.onclick=()=>respondRequest(b.dataset.id,"accepted"));
 document.querySelectorAll(".reject-request").forEach(b=>b.onclick=()=>respondRequest(b.dataset.id,"rejected"));

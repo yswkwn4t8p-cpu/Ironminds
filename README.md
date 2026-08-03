@@ -98,3 +98,11 @@ Fortschrittsfotos werden komprimiert und innerhalb des synchronisierten Ironmind
 - SVG-Symbole auf der Startseite werden wieder korrekt geladen
 - fehlerhafte HTML-Schließung im Startbereich korrigiert
 - Profilname wird lokal und in Supabase synchron gehalten
+
+## Neu in v4.1
+
+- Stresslevel wird erst beim Abschluss des Trainings abgefragt
+- jede Übung erhält am Ende eine separate Stressbewertung von 1 bis 10
+- bei der Planerstellung können Sätze und Wiederholungen pro Übung vorgegeben werden
+- Planvorgaben werden beim Start automatisch als Satzanzahl und Wiederholungsziel übernommen
+- letzte Trainingswerte haben weiterhin Vorrang und werden vorausgefüllt
