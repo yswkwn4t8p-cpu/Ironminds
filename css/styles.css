@@ -15,3 +15,13 @@ h2,h3{margin:0 0 10px}.hero{background:linear-gradient(135deg,#111827,#334155);c
 
 .photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:12px}
 .photo-grid figure{margin:0}.photo-grid img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;border:1px solid var(--line)}.photo-grid figcaption{font-size:11px;color:var(--muted);margin-top:4px;text-align:center}
+
+/* Ironminds fitness theme */
+html,body{background:#090b0f;color:#f8fafc;background-image:linear-gradient(rgba(6,8,12,.83),rgba(6,8,12,.9)),url("../assets/fitness-background.jpg");background-size:cover;background-position:center top;background-attachment:fixed}
+.app{position:relative}.card{background:rgba(17,20,25,.91);border-color:rgba(255,255,255,.10);box-shadow:0 12px 40px rgba(0,0,0,.32);backdrop-filter:blur(10px)}
+:root{--card:#111419;--text:#f8fafc;--muted:#aeb5c0;--line:rgba(255,255,255,.12);--accent:#ef2b2d;--good:#16a36a;--shadow:0 12px 40px rgba(0,0,0,.32)}
+.btn,.icon,.field input,.field select,.field textarea{background:rgba(25,28,34,.96);color:#f8fafc;border-color:rgba(255,255,255,.13)}
+.primary{background:linear-gradient(135deg,#ef2b2d,#b8131a);border-color:#ef2b2d}.hero{background:linear-gradient(135deg,rgba(5,7,10,.92),rgba(31,35,43,.86))}.tabs{background:rgba(10,12,16,.75)}.tab{color:#cbd5e1}.tab.active{background:rgba(239,43,45,.18);color:#fff}.row{background:rgba(255,255,255,.025)}
+.logo{background:linear-gradient(135deg,#171a20,#050607);border:1px solid rgba(255,255,255,.16);box-shadow:0 0 0 3px rgba(239,43,45,.12)}
+.profile-logout{width:100%;margin-top:2px;border-color:rgba(239,43,45,.45);background:linear-gradient(135deg,#b8131a,#ef2b2d);color:#fff}
+@media(max-width:700px){header{align-items:flex-start}.brand{min-width:0}.brand h1{font-size:20px}.actions{margin-left:auto;flex-wrap:wrap;justify-content:flex-end;max-width:54%}.header-logout{display:none!important}.sync{max-width:108px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bottom{background:rgba(7,9,12,.96);border-top-color:rgba(255,255,255,.11)}.bottom button{color:#aeb5c0}.bottom button.active{background:rgba(239,43,45,.16);color:#ff4345}.app{padding-top:10px}}

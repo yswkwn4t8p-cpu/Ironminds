@@ -47,3 +47,11 @@ Wichtig: Das aktualisierte `supabase/schema.sql` erneut vollständig im SQL Edit
 
 Die aktualisierte Datei `supabase/schema.sql` erneut vollständig im SQL Editor ausführen.
 Fortschrittsfotos werden komprimiert und innerhalb des synchronisierten Ironminds-Datensatzes gespeichert. Für sehr viele hochauflösende Fotos wäre später ein separater Supabase-Storage-Bucket sinnvoll.
+
+## Neu in v3.3
+
+- dunkles Premium-Fitnessdesign mit Gym-Hintergrund
+- besser lesbare halbtransparente Karten
+- mobiler Header korrigiert
+- Abmeldebutton am Handy nicht mehr abgeschnitten
+- Abmelden zusätzlich im Profilbereich
